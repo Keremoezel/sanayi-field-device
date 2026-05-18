@@ -2,215 +2,845 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#090909" />
-  <title>Field Device</title>
-  <link rel="manifest" href="/manifest.json" />
-  <link rel="stylesheet" href="/style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Field Device" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/icon.svg" />
+  <title>Field Device</title>
   <style>
-    .mode-list { display: flex; flex-direction: column; gap: 10px; }
-
-    .mode-card {
-      display: flex; align-items: center; gap: 14px;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 14px; padding: 16px;
-      text-decoration: none; color: inherit;
-      transition: background 0.1s;
-      position: relative; overflow: hidden;
-    }
-    .mode-card:active { background: var(--surface2); }
-    .mode-card::after {
-      content: '›'; position: absolute; right: 16px; top: 50%;
-      transform: translateY(-50%);
-      font-size: 20px; color: var(--muted2);
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0; padding: 0;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    .mode-icon {
-      width: 46px; height: 46px; border-radius: 12px;
+    :root {
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --mono: 'SF Mono', 'Menlo', ui-monospace, 'Courier New', monospace;
+
+      --c-bg:      #000;
+      --c-s1:      #0d0d0d;
+      --c-s2:      #141414;
+      --c-s3:      #1c1c1c;
+      --c-line:    #222;
+      --c-line2:   #2a2a2a;
+
+      --c-t1:      #f2f2f2;
+      --c-t2:      #a0a0a0;
+      --c-t3:      #555;
+
+      --c-green:   #30d158;
+      --c-red:     #ff453a;
+      --c-yellow:  #ffd60a;
+      --c-orange:  #ff9f0a;
+      --c-blue:    #0a84ff;
+      --c-purple:  #bf5af2;
+      --c-teal:    #5ac8fa;
+
+      --nav-h:     56px;
+      --header-h:  60px;
+      --radius:    14px;
+      --radius-sm: 9px;
+    }
+
+    html { background: var(--c-bg); }
+
+    body {
+      font-family: var(--font);
+      background: var(--c-bg);
+      color: var(--c-t1);
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    /* ─── Header ─────────────────────────────────── */
+    #header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: var(--header-h);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 0.5px solid var(--c-line);
+    }
+    .header-brand { display: flex; flex-direction: column; gap: 1px; }
+    .header-label { font-size: 10px; color: var(--c-t3); letter-spacing: 0.1em; text-transform: uppercase; font-family: var(--mono); }
+    .header-title { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+
+    .header-right { display: flex; align-items: center; gap: 6px; }
+    .status-pill {
+      display: flex; align-items: center; gap: 5px;
+      background: var(--c-s2); border: 0.5px solid var(--c-line2);
+      border-radius: 20px; padding: 4px 10px;
+      font-family: var(--mono); font-size: 11px; color: var(--c-t2);
+    }
+    .led {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--c-t3); flex-shrink: 0;
+    }
+    .led.green { background: var(--c-green); box-shadow: 0 0 6px var(--c-green); }
+    .led.red   { background: var(--c-red); }
+    .led.pulse { animation: ledpulse 2s ease-in-out infinite; }
+    @keyframes ledpulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    /* ─── Main scroll area ───────────────────────── */
+    #main {
+      position: fixed;
+      top: var(--header-h);
+      left: 0; right: 0;
+      bottom: var(--nav-h);
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .tab-page {
+      display: none;
+      padding: 16px 16px 24px;
+      min-height: 100%;
+      animation: pagein .2s ease;
+    }
+    .tab-page.active { display: block; }
+    @keyframes pagein { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ─── Bottom Nav ─────────────────────────────── */
+    #nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+      height: var(--nav-h);
+      display: flex; align-items: stretch;
+      background: rgba(0,0,0,0.9);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border-top: 0.5px solid var(--c-line);
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    .nav-btn {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 3px;
+      background: none; border: none; cursor: pointer;
+      padding: 6px 4px; color: var(--c-t3);
+      transition: color .15s;
+    }
+    .nav-btn.active { color: var(--c-blue); }
+    .nav-icon { font-size: 20px; line-height: 1; }
+    .nav-label { font-size: 9px; letter-spacing: 0.02em; font-weight: 500; }
+
+    /* ─── Section headers ────────────────────────── */
+    .section-header {
+      font-size: 11px; font-weight: 600; color: var(--c-t3);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin: 20px 0 8px 4px;
+    }
+    .section-header:first-child { margin-top: 4px; }
+
+    /* ─── Grouped list (iOS style) ───────────────── */
+    .group {
+      background: var(--c-s1);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .row {
+      display: flex; align-items: center;
+      padding: 12px 16px; gap: 12px;
+      border-bottom: 0.5px solid var(--c-line);
+      min-height: 48px;
+    }
+    .row:last-child { border-bottom: none; }
+    .row-icon {
+      width: 30px; height: 30px; border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 22px; flex-shrink: 0;
+      font-size: 15px; flex-shrink: 0;
     }
-    .mode-icon.amber  { background: #f59e0b15; border: 1px solid #f59e0b33; }
-    .mode-icon.blue   { background: #3b82f615; border: 1px solid #3b82f633; }
-    .mode-icon.purple { background: #a855f715; border: 1px solid #a855f733; }
-    .mode-icon.green  { background: #22c55e15; border: 1px solid #22c55e33; }
+    .row-body { flex: 1; min-width: 0; }
+    .row-title { font-size: 15px; font-weight: 500; }
+    .row-sub   { font-size: 12px; color: var(--c-t2); margin-top: 1px; }
+    .row-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 
-    .mode-text { flex: 1; min-width: 0; padding-right: 16px; }
-    .mode-name { font-size: 15px; font-weight: 700; }
-    .mode-desc { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
-
-    .mode-status {
-      position: absolute; top: 12px; right: 30px;
-      font-size: 10px; color: var(--muted);
+    /* ─── Status badge ───────────────────────────── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 12px; font-weight: 600;
     }
+    .badge.online  { color: var(--c-green); }
+    .badge.offline { color: var(--c-red); }
+    .badge.warn    { color: var(--c-yellow); }
+    .badge.muted   { color: var(--c-t3); }
 
-    .divider-section { height: 12px; }
+    /* ─── Stats grid ─────────────────────────────── */
+    .stats-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .stat-card {
+      background: var(--c-s1); border-radius: var(--radius);
+      padding: 14px;
+    }
+    .stat-label { font-size: 11px; color: var(--c-t3); font-weight: 500; margin-bottom: 6px; }
+    .stat-value { font-size: 22px; font-weight: 700; font-family: var(--mono); line-height: 1; }
+    .stat-value.green  { color: var(--c-green); }
+    .stat-value.red    { color: var(--c-red); }
+    .stat-value.blue   { color: var(--c-blue); }
+    .stat-value.muted  { color: var(--c-t3); }
+    .stat-sub  { font-size: 11px; color: var(--c-t2); margin-top: 4px; }
 
-    .install-banner {
+    /* ─── Services 2×2 grid ──────────────────────── */
+    .services-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .svc-card {
+      background: var(--c-s1); border-radius: var(--radius);
+      padding: 14px;
+      border-left: 3px solid var(--c-line2);
+    }
+    .svc-card.ok      { border-left-color: var(--c-green); }
+    .svc-card.down    { border-left-color: var(--c-red); }
+    .svc-card.unknown { border-left-color: var(--c-line2); }
+    .svc-name  { font-size: 10px; color: var(--c-t3); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; margin-bottom: 6px; }
+    .svc-val   { font-size: 14px; font-weight: 700; }
+    .svc-val.ok   { color: var(--c-green); }
+    .svc-val.down { color: var(--c-red); }
+    .svc-val.muted { color: var(--c-t3); }
+    .svc-ms    { font-size: 10px; color: var(--c-t3); margin-top: 3px; font-family: var(--mono); }
+
+    /* ─── Tag chips ──────────────────────────────── */
+    .tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px; }
+    .tag {
+      font-size: 10px; font-family: var(--mono);
+      padding: 2px 7px; border-radius: 5px;
+      background: var(--c-s3); color: var(--c-t2);
+    }
+    .tag.green  { background: #30d15818; color: var(--c-green); }
+    .tag.red    { background: #ff453a18; color: var(--c-red); }
+    .tag.yellow { background: #ffd60a18; color: var(--c-yellow); }
+    .tag.orange { background: #ff9f0a18; color: var(--c-orange); }
+    .tag.blue   { background: #0a84ff18; color: var(--c-blue); }
+    .tag.purple { background: #bf5af218; color: var(--c-purple); }
+
+    /* ─── Action buttons ─────────────────────────── */
+    .action-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .action-btn {
+      display: flex; flex-direction: column; align-items: flex-start;
+      gap: 6px; background: var(--c-s1); border: none;
+      border-radius: var(--radius); padding: 14px;
+      cursor: pointer; font-family: var(--font);
+      text-align: left; transition: background .1s;
+    }
+    .action-btn:active { background: var(--c-s3); }
+    .action-icon { font-size: 20px; }
+    .action-title { font-size: 14px; font-weight: 600; color: var(--c-t1); }
+    .action-sub   { font-size: 11px; color: var(--c-t2); }
+
+    /* ─── Log feed ───────────────────────────────── */
+    .log-row {
+      display: flex; gap: 10px; padding: 10px 16px;
+      border-bottom: 0.5px solid var(--c-line);
+      font-size: 12px; line-height: 1.4;
+    }
+    .log-row:last-child { border-bottom: none; }
+    .log-time { font-family: var(--mono); color: var(--c-t3); flex-shrink: 0; font-size: 11px; padding-top: 1px; min-width: 48px; }
+    .log-body { flex: 1; }
+    .log-msg  { color: var(--c-t1); }
+    .log-msg.ok   { color: var(--c-green); }
+    .log-msg.err  { color: var(--c-red); }
+    .log-msg.warn { color: var(--c-yellow); }
+    .log-meta { font-size: 10px; color: var(--c-t3); margin-top: 2px; font-family: var(--mono); }
+
+    /* ─── Ping result ────────────────────────────── */
+    .ping-result {
+      background: var(--c-s2); border-radius: var(--radius-sm);
+      padding: 12px 14px; font-family: var(--mono); font-size: 12px;
+      color: var(--c-t2); white-space: pre; margin-top: 8px;
+      border: 0.5px solid var(--c-line);
+    }
+    .ping-result.ok  { color: var(--c-green); border-color: #30d15830; background: #30d15808; }
+    .ping-result.err { color: var(--c-red);   border-color: #ff453a30; background: #ff453a08; }
+
+    /* ─── Scanner placeholder ────────────────────── */
+    .scanner-hero {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 48px 24px; text-align: center;
+      gap: 12px;
+    }
+    .scanner-icon-wrap {
+      width: 88px; height: 88px; border-radius: 28px;
+      background: #ff9f0a15; border: 1.5px solid #ff9f0a30;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 40px; margin-bottom: 4px;
+    }
+    .scanner-badge {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      letter-spacing: 0.1em; padding: 4px 12px; border-radius: 20px;
+      background: #ff9f0a18; border: 1px solid #ff9f0a40;
+      color: var(--c-orange); text-transform: uppercase;
+    }
+    .roadmap-step {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 10px 0; border-bottom: 0.5px solid var(--c-line);
+    }
+    .roadmap-step:last-child { border-bottom: none; }
+    .step-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      margin-top: 4px; flex-shrink: 0;
+    }
+    .step-dot.done    { background: var(--c-green); }
+    .step-dot.current { background: var(--c-orange); box-shadow: 0 0 6px var(--c-orange); }
+    .step-dot.todo    { background: var(--c-line2); }
+    .step-text { font-size: 13px; color: var(--c-t2); line-height: 1.4; }
+    .step-text b { color: var(--c-t1); }
+
+    /* ─── History empty ──────────────────────────── */
+    .empty {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 60px 24px; gap: 10px; text-align: center;
+    }
+    .empty-icon { font-size: 44px; opacity: .3; }
+    .empty-title { font-size: 15px; font-weight: 600; color: var(--c-t2); }
+    .empty-sub   { font-size: 13px; color: var(--c-t3); }
+
+    /* ─── Spinner ────────────────────────────────── */
+    .spin {
+      display: inline-block; width: 14px; height: 14px;
+      border: 1.5px solid var(--c-line2); border-top-color: var(--c-blue);
+      border-radius: 50%; animation: spinning .7s linear infinite;
+    }
+    @keyframes spinning { to { transform: rotate(360deg); } }
+
+    /* ─── PWA install banner ─────────────────────── */
+    #installBanner {
       display: none; align-items: center; justify-content: space-between;
-      gap: 12px; margin: 12px 16px 0;
-      background: #3b82f60d; border: 1px solid #3b82f633;
-      border-radius: 12px; padding: 12px 14px;
+      gap: 12px; margin-bottom: 12px;
+      background: #0a84ff10; border: 0.5px solid #0a84ff30;
+      border-radius: var(--radius); padding: 12px 14px;
     }
-    .install-banner.show { display: flex; }
-    .install-text { font-size: 12px; color: var(--text); line-height: 1.4; }
-    .install-text span { font-size: 10px; color: var(--muted); display: block; margin-top: 2px; }
-    .install-btn {
-      flex-shrink: 0; background: var(--blue); color: #fff;
-      border: none; border-radius: 8px; padding: 8px 14px;
-      font-size: 12px; font-family: inherit; font-weight: 600; cursor: pointer;
+    #installBanner.show { display: flex; }
+    .install-text { flex: 1; font-size: 13px; }
+    .install-text small { font-size: 11px; color: var(--c-t2); display: block; margin-top: 2px; }
+    .install-ok {
+      background: var(--c-blue); color: #fff; border: none;
+      border-radius: 8px; padding: 7px 14px; font-size: 13px;
+      font-weight: 600; font-family: var(--font); cursor: pointer; flex-shrink: 0;
     }
-    .install-close {
-      background: none; border: none; color: var(--muted);
-      font-size: 18px; cursor: pointer; padding: 0 4px; flex-shrink: 0;
+    .install-x {
+      background: none; border: none; color: var(--c-t3);
+      font-size: 20px; cursor: pointer; padding: 0;
     }
+
+    /* ─── Tab-specific project tabs ─────────────── */
+    .htabs { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 12px; scrollbar-width: none; }
+    .htabs::-webkit-scrollbar { display: none; }
+    .htab {
+      flex-shrink: 0; padding: 5px 14px; border-radius: 20px;
+      font-size: 12px; font-weight: 500; cursor: pointer;
+      background: var(--c-s2); border: 0.5px solid var(--c-line2);
+      color: var(--c-t2); font-family: var(--font);
+    }
+    .htab.active { background: #0a84ff18; border-color: #0a84ff40; color: var(--c-blue); }
+
+    a { color: inherit; text-decoration: none; }
+    button { font-family: var(--font); }
   </style>
 </head>
 <body>
 
-<div class="statusbar">
-  <div class="statusbar-left">
-    <div class="statusbar-device">Sanayi Field Device</div>
-    <div class="statusbar-title">Ana Menü</div>
+<!-- ─── Header ──────────────────────────────────── -->
+<header id="header">
+  <div class="header-brand">
+    <div class="header-label">Sanayi</div>
+    <div class="header-title">Field Device</div>
   </div>
-  <div class="statusbar-right">
-    <div class="pill">
-      <div class="dot green pulse"></div>
-      <span id="uptime">—</span>
+  <div class="header-right">
+    <div class="status-pill">
+      <div class="led green pulse"></div>
+      <span id="hUptime">—</span>
     </div>
-    <div class="pill" id="clock">—</div>
+    <div class="status-pill" id="hClock">—</div>
   </div>
-</div>
+</header>
 
-<!-- PWA install banner -->
-<div class="install-banner" id="installBanner">
-  <div class="install-text">
-    Ana ekrana ekle
-    <span>Uygulama gibi aç, tarayıcı yok</span>
-  </div>
-  <button class="install-btn" id="installBtn">Ekle</button>
-  <button class="install-close" onclick="document.getElementById('installBanner').classList.remove('show')">×</button>
-</div>
+<!-- ─── Main content ────────────────────────────── -->
+<main id="main">
 
-<div class="section">
-  <div class="section-label">Modlar</div>
-  <div class="mode-list">
-
-    <a class="mode-card" href="/scanner.html">
-      <div class="mode-icon amber">📷</div>
-      <div class="mode-text">
-        <div class="mode-name">Live Damage Scanner</div>
-        <div class="mode-desc">Canlı kamera ile araç üzerinde AI hasar tespiti</div>
-      </div>
-    </a>
-
-    <a class="mode-card" href="/monitor.html">
-      <div class="mode-icon blue">📊</div>
-      <div class="mode-text">
-        <div class="mode-name">System Monitor</div>
-        <div class="mode-desc">API · Database · AI Model · Blob · Projeler</div>
-      </div>
-    </a>
-
-    <a class="mode-card" href="/history.html">
-      <div class="mode-icon purple">🗂</div>
-      <div class="mode-text">
-        <div class="mode-name">Scan History</div>
-        <div class="mode-desc">Geçmiş taramalar ve analiz sonuçları</div>
-      </div>
-    </a>
-
-    <a class="mode-card" href="/logs.html">
-      <div class="mode-icon" style="background:#a855f715;border:1px solid #a855f733">📋</div>
-      <div class="mode-text">
-        <div class="mode-name">Uygulama Logları</div>
-        <div class="mode-desc">Giriş yapanlar · Auth olayları · Hatalar</div>
-      </div>
-    </a>
-
-    <a class="mode-card" href="/tools.html">
-      <div class="mode-icon green">⚙️</div>
-      <div class="mode-text">
-        <div class="mode-name">Developer Tools</div>
-        <div class="mode-desc">Ping · Local loglar · Ortam · Restart</div>
-      </div>
-    </a>
-
-  </div>
-</div>
-
-<div class="divider-section"></div>
-
-<div class="section">
-  <div class="section-label">Cihaz</div>
-  <div class="info-grid">
-    <div class="info-cell">
-      <div class="info-key">Local Server</div>
-      <div class="info-val green">online</div>
+  <!-- ── SCANNER tab ── -->
+  <div class="tab-page" id="tab-scanner">
+    <div class="scanner-hero">
+      <div class="scanner-icon-wrap">📷</div>
+      <h2 style="font-size:20px;font-weight:700">Live Damage Scanner</h2>
+      <p style="font-size:13px;color:var(--c-t2);max-width:280px;line-height:1.5">
+        Canlı kamera görüntüsü üzerinden araç hasarını AI ile tespit eder.
+      </p>
+      <div class="scanner-badge">Faz 2 — Yapım Aşamasında</div>
     </div>
-    <div class="info-cell">
-      <div class="info-key">Uptime</div>
-      <div class="info-val" id="uptimeDetail">—</div>
-    </div>
-    <div class="info-cell">
-      <div class="info-key">Adres</div>
-      <div class="info-val" style="font-size:11px;padding-top:2px">localhost:8787</div>
-    </div>
-    <div class="info-cell">
-      <div class="info-key">Versiyon</div>
-      <div class="info-val" id="version" style="color:var(--muted)">—</div>
+
+    <div class="section-header">Yol Haritası</div>
+    <div class="group" style="padding:4px 16px">
+      <div class="roadmap-step"><div class="step-dot done"></div><div class="step-text"><b>Faz 0</b> — Local server + web arayüz</div></div>
+      <div class="roadmap-step"><div class="step-dot done"></div><div class="step-text"><b>Faz 1</b> — System monitor + developer tools</div></div>
+      <div class="roadmap-step"><div class="step-dot current"></div><div class="step-text"><b>Faz 2</b> — Fotoğraf çek → AI'ya gönder → sonucu göster</div></div>
+      <div class="roadmap-step"><div class="step-dot todo"></div><div class="step-text"><b>Faz 3</b> — Canlı kamera + her 2s periyodik analiz + overlay</div></div>
+      <div class="roadmap-step"><div class="step-dot todo"></div><div class="step-text"><b>Faz 4</b> — Sanayi backend sync + scan history</div></div>
     </div>
   </div>
-</div>
+
+  <!-- ── MONITOR tab ── -->
+  <div class="tab-page active" id="tab-monitor">
+
+    <div id="installBanner">
+      <div class="install-text">
+        Ana ekrana ekle
+        <small>Uygulama gibi aç — tarayıcı yok</small>
+      </div>
+      <button class="install-ok" id="installBtn">Ekle</button>
+      <button class="install-x" onclick="document.getElementById('installBanner').classList.remove('show')">×</button>
+    </div>
+
+    <div class="section-header">Sanayi — Servisler</div>
+    <div class="services-grid" id="sanayiGrid">
+      <div class="svc-card unknown"><div class="svc-name">API</div><div class="svc-val muted">—</div></div>
+      <div class="svc-card unknown"><div class="svc-name">Database</div><div class="svc-val muted">—</div></div>
+      <div class="svc-card unknown"><div class="svc-name">AI Model</div><div class="svc-val muted">—</div></div>
+      <div class="svc-card unknown"><div class="svc-name">Blob</div><div class="svc-val muted">—</div></div>
+    </div>
+
+    <div class="section-header">Projeler</div>
+    <div class="group" id="projectList">
+      <div class="row"><div class="row-body"><div class="row-title" style="color:var(--c-t3)">Kontrol ediliyor...</div></div><div class="spin"></div></div>
+    </div>
+
+    <div class="section-header">Vercel — Son Deploylar</div>
+    <div class="group" id="vercelList">
+      <div class="row"><div class="row-body"><div class="row-title" style="color:var(--c-t3)">Yükleniyor...</div></div><div class="spin"></div></div>
+    </div>
+
+    <div style="margin-top:16px;display:flex;gap:8px">
+      <button class="action-btn" style="flex:1;flex-direction:row;align-items:center;padding:12px 16px" onclick="loadMonitor()">
+        <span style="color:var(--c-blue);font-size:16px">↻</span>
+        <span style="font-size:14px;font-weight:600;color:var(--c-t1)">Yenile</span>
+      </button>
+      <div style="flex:1;background:var(--c-s1);border-radius:var(--radius);padding:12px 16px">
+        <div style="font-size:10px;color:var(--c-t3);text-transform:uppercase;letter-spacing:.08em;font-weight:600">Son Kontrol</div>
+        <div style="font-size:13px;margin-top:3px;font-family:var(--mono)" id="lastChecked">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── HISTORY tab ── -->
+  <div class="tab-page" id="tab-history">
+    <div id="historyList"></div>
+  </div>
+
+  <!-- ── LOGS tab ── -->
+  <div class="tab-page" id="tab-logs">
+    <div class="htabs" id="logTabs">
+      <button class="htab active" onclick="filterLogs(null,this)">Tümü</button>
+    </div>
+    <div class="group" id="logFeed">
+      <div class="log-row"><div class="log-time">—</div><div class="log-body"><div class="log-msg" style="color:var(--c-t3)">Yükleniyor...</div></div></div>
+    </div>
+    <div style="margin-top:12px">
+      <button class="action-btn" style="width:100%;flex-direction:row;align-items:center;padding:12px 16px;gap:8px;justify-content:center" onclick="loadLogs()">
+        <span style="color:var(--c-blue)">↻</span>
+        <span style="font-size:14px;font-weight:600;color:var(--c-t1)">Logları Yenile</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── TOOLS tab ── -->
+  <div class="tab-page" id="tab-tools">
+
+    <div class="section-header">Hızlı Kontrol</div>
+    <div class="action-grid">
+      <button class="action-btn" onclick="ping('sanayi')">
+        <div class="action-icon">🔵</div>
+        <div class="action-title">Sanayi API</div>
+        <div class="action-sub">vercel.app</div>
+      </button>
+      <button class="action-btn" onclick="ping('zanzibar')">
+        <div class="action-icon">🟢</div>
+        <div class="action-title">Zanzibar</div>
+        <div class="action-sub">coolify</div>
+      </button>
+      <button class="action-btn" onclick="ping('local')">
+        <div class="action-icon">🖥</div>
+        <div class="action-title">Local Server</div>
+        <div class="action-sub">localhost:8787</div>
+      </button>
+      <button class="action-btn" onclick="pingAll()">
+        <div class="action-icon">⚡️</div>
+        <div class="action-title">Tümünü Ping</div>
+        <div class="action-sub">hepsini kontrol et</div>
+      </button>
+    </div>
+    <div class="ping-result" id="pingResult">Ping için yukarıdan bir servis seç...</div>
+
+    <div class="section-header">Server</div>
+    <div class="group">
+      <div class="row">
+        <div class="row-body">
+          <div class="row-title">Versiyon</div>
+          <div class="row-sub">Field Device</div>
+        </div>
+        <div class="row-right" style="font-family:var(--mono);font-size:13px;color:var(--c-t2)" id="toolVersion">—</div>
+      </div>
+      <div class="row">
+        <div class="row-body"><div class="row-title">Adres</div></div>
+        <div class="row-right" style="font-family:var(--mono);font-size:13px;color:var(--c-t2)">localhost:8787</div>
+      </div>
+      <div class="row">
+        <div class="row-body"><div class="row-title">Node.js</div></div>
+        <div class="row-right" style="font-family:var(--mono);font-size:13px;color:var(--c-t2)" id="toolNode">—</div>
+      </div>
+      <div class="row">
+        <div class="row-body">
+          <div class="row-title">Uptime</div>
+        </div>
+        <div class="row-right" style="font-family:var(--mono);font-size:13px;color:var(--c-t2)" id="toolUptime">—</div>
+      </div>
+    </div>
+
+    <div class="section-header">Yönetim</div>
+    <div class="group">
+      <div class="row" style="cursor:pointer" onclick="clearLogs()">
+        <div class="row-icon" style="background:#ffd60a15">🗑</div>
+        <div class="row-body"><div class="row-title">Local Logları Temizle</div></div>
+        <div style="color:var(--c-t3);font-size:18px">›</div>
+      </div>
+      <div class="row" style="cursor:pointer" onclick="restartServer()">
+        <div class="row-icon" style="background:#ff453a15">🔄</div>
+        <div class="row-body"><div class="row-title" style="color:var(--c-red)">Server'ı Yeniden Başlat</div></div>
+        <div style="color:var(--c-t3);font-size:18px">›</div>
+      </div>
+    </div>
+
+    <div class="section-header">Local Loglar</div>
+    <div class="group" id="localLogFeed">
+      <div class="log-row"><div class="log-time">—</div><div class="log-body"><div class="log-msg" style="color:var(--c-t3)">Yükleniyor...</div></div></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ─── Bottom Navigation ────────────────────────── -->
+<nav id="nav">
+  <button class="nav-btn" data-tab="scanner" onclick="goto('scanner',this)">
+    <span class="nav-icon">📷</span>
+    <span class="nav-label">Scanner</span>
+  </button>
+  <button class="nav-btn active" data-tab="monitor" onclick="goto('monitor',this)">
+    <span class="nav-icon">📊</span>
+    <span class="nav-label">Monitor</span>
+  </button>
+  <button class="nav-btn" data-tab="history" onclick="goto('history',this)">
+    <span class="nav-icon">🗂</span>
+    <span class="nav-label">History</span>
+  </button>
+  <button class="nav-btn" data-tab="logs" onclick="goto('logs',this)">
+    <span class="nav-icon">📋</span>
+    <span class="nav-label">Logs</span>
+  </button>
+  <button class="nav-btn" data-tab="tools" onclick="goto('tools',this)">
+    <span class="nav-icon">⚙️</span>
+    <span class="nav-label">Tools</span>
+  </button>
+</nav>
 
 <script>
-  function formatUptime(s) {
-    if (s < 60) return s + 's';
-    if (s < 3600) return Math.floor(s / 60) + 'm';
-    return Math.floor(s / 3600) + 'h ' + Math.floor((s % 3600) / 60) + 'm';
-  }
+// ─── Navigation ──────────────────────────────────
+let currentTab = 'monitor';
+const tabLoaders = { monitor: loadMonitor, history: loadHistory, logs: loadLogs, tools: loadTools };
 
-  function tickClock() {
-    document.getElementById('clock').textContent = new Date().toLocaleTimeString('tr-TR');
-  }
+function goto(tab, btn) {
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('main').scrollTop = 0;
+  if (tab !== currentTab) { currentTab = tab; tabLoaders[tab]?.(); }
+}
 
-  async function loadHealth() {
-    try {
-      const d = await fetch('/api/health').then(r => r.json());
-      const ut = formatUptime(d.uptime);
-      document.getElementById('uptime').textContent = ut;
-      document.getElementById('uptimeDetail').textContent = ut;
-      document.getElementById('version').textContent = 'v' + d.version;
-    } catch {}
-  }
+// ─── Clock & health ───────────────────────────────
+function tick() { document.getElementById('hClock').textContent = new Date().toLocaleTimeString('tr-TR'); }
+setInterval(tick, 1000); tick();
 
-  setInterval(tickClock, 1000); tickClock();
-  setInterval(loadHealth, 10000); loadHealth();
+function fmt(s) { return s<60?s+'s':s<3600?Math.floor(s/60)+'m':Math.floor(s/3600)+'h '+Math.floor((s%3600)/60)+'m'; }
 
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+async function loadHealth() {
+  try {
+    const d = await fetch('/api/health').then(r=>r.json());
+    document.getElementById('hUptime').textContent = fmt(d.uptime);
+    document.getElementById('toolUptime').textContent = fmt(d.uptime);
+    document.getElementById('toolVersion').textContent = 'v'+d.version;
+    document.getElementById('toolNode').textContent = d.node||'—';
+  } catch {}
+}
+setInterval(loadHealth, 10000); loadHealth();
 
-  // PWA install prompt
-  let installPrompt = null;
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    installPrompt = e;
-    document.getElementById('installBanner').classList.add('show');
-  });
-  document.getElementById('installBtn').addEventListener('click', async () => {
-    if (!installPrompt) return;
-    installPrompt.prompt();
-    const { outcome } = await installPrompt.userChoice;
-    if (outcome === 'accepted') {
-      document.getElementById('installBanner').classList.remove('show');
+// ─── Monitor ──────────────────────────────────────
+async function loadMonitor() {
+  try {
+    const data = await fetch('/api/monitor/status').then(r=>r.json());
+    renderSanayi(data.sanayi);
+    renderProjects(data.projects);
+  } catch(e) { console.error(e); }
+  loadVercel();
+  document.getElementById('lastChecked').textContent = new Date().toLocaleTimeString('tr-TR');
+}
+
+function renderSanayi(sanayi) {
+  const g = document.getElementById('sanayiGrid');
+  g.innerHTML = sanayi.services.map(s=>{
+    const ok = s.online === true ? 'ok' : s.online === false ? 'down' : 'unknown';
+    return `<div class="svc-card ${ok}">
+      <div class="svc-name">${s.name}</div>
+      <div class="svc-val ${ok==='ok'?'ok':ok==='down'?'down':'muted'}">${ok==='ok'?'online':ok==='down'?'offline':'—'}</div>
+      <div class="svc-ms">${s.ms?s.ms+'ms':s.note||''}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderProjects(projects) {
+  const msColor = ms => ms<500?'green':ms<1500?'yellow':'orange';
+  document.getElementById('projectList').innerHTML = projects.map(p=>`
+    <a class="row" href="${p.url}" target="_blank" rel="noopener">
+      <div class="row-body">
+        <div class="row-title">${p.name}</div>
+        <div class="tags" style="margin-top:5px">
+          ${p.status?`<span class="tag ${p.online?'green':'red'}">${p.status}</span>`:''}
+          ${p.ms?`<span class="tag ${msColor(p.ms)}">${p.ms}ms</span>`:''}
+          <span class="tag">${p.host}</span>
+        </div>
+      </div>
+      <div class="badge ${p.online?'online':'offline'}">
+        <div class="led ${p.online?'green':'red'}"></div>
+        ${p.online?'online':'offline'}
+      </div>
+    </a>`).join('');
+}
+
+async function loadVercel() {
+  try {
+    const data = await fetch('/api/vercel/projects').then(r=>r.json());
+    if (data.error) {
+      document.getElementById('vercelList').innerHTML =
+        `<div class="row"><div class="row-body"><div class="row-title" style="color:var(--c-t3);font-size:13px">${data.error}</div></div></div>`;
+      return;
     }
-    installPrompt = null;
-  });
-  window.addEventListener('appinstalled', () => {
-    document.getElementById('installBanner').classList.remove('show');
-  });
+    document.getElementById('vercelList').innerHTML = data.map(p=>{
+      const d = p.lastDeploy;
+      const stateColor = {READY:'green',ERROR:'red',BUILDING:'yellow',CANCELED:'muted'};
+      const stateLabel = {READY:'✓ Hazır',ERROR:'✗ Hata',BUILDING:'⟳ Derleniyor',CANCELED:'İptal'};
+      const st = d?.state||'unknown';
+      const ago = d ? timeAgo(d.createdAt) : '—';
+      const dur = d?.buildDuration ? Math.round(d.buildDuration/1000)+'s' : null;
+      return `<div class="row">
+        <div class="row-body">
+          <div class="row-title">${p.name}</div>
+          ${d?.commit?`<div class="row-sub" style="margin-top:3px">"${d.commit}"</div>`:''}
+          <div class="tags" style="margin-top:5px">
+            ${d?.branch?`<span class="tag">${d.branch}</span>`:''}
+            ${ago!=='—'?`<span class="tag">${ago}</span>`:''}
+            ${dur?`<span class="tag">${dur} build</span>`:''}
+            ${d?.author?`<span class="tag">${d.author}</span>`:''}
+          </div>
+        </div>
+        <span class="badge ${stateColor[st]||'muted'}" style="flex-shrink:0">${stateLabel[st]||st}</span>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    document.getElementById('vercelList').innerHTML =
+      `<div class="row"><div class="row-body"><div class="row-title" style="color:var(--c-red);font-size:12px">Vercel API: ${e.message}</div></div></div>`;
+  }
+}
+
+function timeAgo(ts) {
+  const m = Math.floor((Date.now()-ts)/60000);
+  if (m<1) return 'az önce';
+  if (m<60) return m+' dk önce';
+  const h = Math.floor(m/60);
+  if (h<24) return h+' saat önce';
+  return Math.floor(h/24)+' gün önce';
+}
+
+// ─── History ──────────────────────────────────────
+async function loadHistory() {
+  try {
+    const scans = await fetch('/api/history').then(r=>r.json());
+    const el = document.getElementById('historyList');
+    if (!scans.length) {
+      el.innerHTML = `<div class="empty"><div class="empty-icon">📷</div><div class="empty-title">Henüz tarama yok</div><div class="empty-sub">Live Scanner'dan ilk taramayı yap</div></div>`;
+      return;
+    }
+    const sColor = {low:'yellow',medium:'orange',high:'red'};
+    const sLabel = {low:'Düşük',medium:'Orta',high:'Yüksek'};
+    el.innerHTML = '<div class="group">' + scans.map(s=>`
+      <div class="row">
+        <div class="row-body">
+          <div class="row-title">Scan #${s.id}</div>
+          <div class="row-sub">${new Date(s.createdAt).toLocaleString('tr-TR')}</div>
+          ${s.summary?`<div class="row-sub" style="margin-top:2px">${s.summary}</div>`:''}
+          <div class="tags" style="margin-top:5px">
+            ${s.severity?`<span class="tag ${sColor[s.severity]||''}">${sLabel[s.severity]||s.severity} Risk</span>`:''}
+            ${s.maxConfidence?`<span class="tag">%${Math.round(s.maxConfidence*100)} güven</span>`:''}
+            <span class="tag ${s.synced?'green':''}">${s.synced?'✓ gönderildi':'local'}</span>
+          </div>
+        </div>
+      </div>`).join('') + '</div>';
+  } catch {
+    document.getElementById('historyList').innerHTML =
+      `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Yüklenemedi</div></div>`;
+  }
+}
+
+// ─── Logs ─────────────────────────────────────────
+let allLogs = []; let activeLogId = null;
+
+async function loadLogs() {
+  try {
+    const data = await fetch('/api/events').then(r=>r.json());
+    allLogs = data;
+    const bar = document.getElementById('logTabs');
+    data.forEach(p => {
+      if (!bar.querySelector(`[data-id="${p.id}"]`)) {
+        const b = document.createElement('button');
+        b.className = 'htab'; b.dataset.id = p.id;
+        b.textContent = p.name.split(' ')[0];
+        b.onclick = () => filterLogs(p.id, b);
+        bar.appendChild(b);
+      }
+    });
+    renderLogFeed(data, activeLogId);
+  } catch {}
+}
+
+function filterLogs(id, btn) {
+  activeLogId = id;
+  document.querySelectorAll('.htab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLogFeed(allLogs, id);
+}
+
+const evType = {auth:'type-auth',error:'type-err',warn:'type-warn',info:'type-ok'};
+const evColor = {auth:'blue',error:'red',warn:'yellow',info:'green'};
+const evAction = {login_success:'✓ Giriş yapıldı',login_failed:'✗ Giriş başarısız',logout:'← Çıkış',register:'+ Kayıt',db_error:'DB hatası',api_error:'API hatası'};
+
+function renderLogFeed(data, filterId) {
+  const shown = filterId ? data.filter(p=>p.id===filterId) : data;
+  let html = '';
+  for (const proj of shown) {
+    if (proj.error) {
+      html += `<div class="log-row"><div class="log-time">—</div><div class="log-body"><div class="log-msg err">${proj.name}: /api/field-logs bulunamadı</div></div></div>`;
+      continue;
+    }
+    if (!proj.events?.length) continue;
+    proj.events.forEach(ev => {
+      const color = evColor[ev.type]||'';
+      const action = evAction[ev.action]||ev.action;
+      const meta = [ev.email, ev.ip, ev.meta?.message].filter(Boolean).join('  ');
+      html += `<div class="log-row">
+        <div class="log-time">${new Date(ev.ts).toLocaleTimeString('tr-TR')}</div>
+        <div class="log-body">
+          <div class="log-msg ${ev.type==='error'?'err':ev.type==='auth'?'':''}">${action}</div>
+          ${meta?`<div class="log-meta">${meta}  [${proj.name}]</div>`:''}
+        </div>
+        <span class="tag ${color}" style="align-self:flex-start;flex-shrink:0">${ev.type}</span>
+      </div>`;
+    });
+  }
+  document.getElementById('logFeed').innerHTML = html ||
+    `<div class="log-row"><div class="log-time">—</div><div class="log-body"><div class="log-msg" style="color:var(--c-t3)">Log bulunamadı — projeye field-log endpoint ekle</div></div></div>`;
+}
+
+// ─── Tools ────────────────────────────────────────
+async function loadTools() {
+  loadLocalLogs();
+}
+
+async function ping(id) {
+  const box = document.getElementById('pingResult');
+  box.className = 'ping-result';
+  box.textContent = `Ping gönderiliyor → ${id}...`;
+  try {
+    const d = await fetch(`/api/projects/${id}/status`).then(r=>r.json());
+    if (d.online) {
+      box.className = 'ping-result ok';
+      box.textContent = `✓ ${d.name||id}\n  HTTP ${d.status}  ${d.ms}ms\n  ${d.url||'localhost:8787'}`;
+    } else {
+      box.className = 'ping-result err';
+      box.textContent = `✗ ${d.name||id}\n  ${d.errorType||d.error||'offline'}\n  ${d.ms}ms`;
+    }
+  } catch(e) {
+    box.className = 'ping-result err';
+    box.textContent = '✗ ' + e.message;
+  }
+}
+
+async function pingAll() {
+  const box = document.getElementById('pingResult');
+  box.className = 'ping-result'; box.textContent = 'Tüm servisler kontrol ediliyor...';
+  try {
+    const projects = await fetch('/api/projects/status').then(r=>r.json());
+    box.className = 'ping-result';
+    box.textContent = projects.map(p =>
+      `${p.online?'✓':'✗'} ${p.name.padEnd(24)} ${p.online?'online  '+p.ms+'ms':'offline  '+(p.errorType||'')}`
+    ).join('\n');
+  } catch(e) { box.className='ping-result err'; box.textContent='✗ '+e.message; }
+}
+
+async function clearLogs() {
+  if (!confirm('Local loglar temizlensin mi?')) return;
+  await fetch('/api/tools/logs', {method:'DELETE'});
+  loadLocalLogs();
+}
+
+async function restartServer() {
+  if (!confirm('Server yeniden başlatılsın mı?')) return;
+  try { await fetch('/api/tools/restart', {method:'POST'}); } catch {}
+  document.getElementById('pingResult').className = 'ping-result ok';
+  document.getElementById('pingResult').textContent = 'Restart sinyali gönderildi.\nstart.sh çalışıyorsa otomatik yeniden başlayacak.';
+}
+
+async function loadLocalLogs() {
+  try {
+    const logs = await fetch('/api/tools/logs').then(r=>r.json());
+    const el = document.getElementById('localLogFeed');
+    if (!logs.length) {
+      el.innerHTML = `<div class="log-row"><div class="log-time">—</div><div class="log-body"><div class="log-msg" style="color:var(--c-t3)">Log yok</div></div></div>`;
+      return;
+    }
+    el.innerHTML = logs.slice(0,30).map(l=>`
+      <div class="log-row">
+        <div class="log-time">${l.time}</div>
+        <div class="log-body"><div class="log-msg ${l.type==='ok'?'ok':l.type==='err'?'err':l.type==='warn'?'warn':''}">${l.msg}</div></div>
+      </div>`).join('');
+  } catch {}
+}
+
+// ─── PWA install ──────────────────────────────────
+let installPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); installPrompt = e;
+  document.getElementById('installBanner').classList.add('show');
+});
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if (!installPrompt) return;
+  installPrompt.prompt();
+  const {outcome} = await installPrompt.userChoice;
+  if (outcome === 'accepted') document.getElementById('installBanner').classList.remove('show');
+  installPrompt = null;
+});
+window.addEventListener('appinstalled', () => document.getElementById('installBanner').classList.remove('show'));
+
+// ─── Init ─────────────────────────────────────────
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+loadMonitor();
+setInterval(loadMonitor, 60000);
 </script>
 </body>
 </html>
