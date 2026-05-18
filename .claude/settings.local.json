@@ -12,7 +12,11 @@
       "Bash(git push *)",
       "PowerShell(Stop-Process -Id \\(Get-NetTCPConnection -LocalPort 8787 -ErrorAction SilentlyContinue\\).OwningProcess -Force -ErrorAction SilentlyContinue; Start-Sleep -Milliseconds 500; cd \"d:\\\\All Projects\\\\sanayitelefon\"; $p = Start-Process node -ArgumentList \"server/index.js\" -PassThru -NoNewWindow; Start-Sleep -Seconds 2; $p.Kill\\(\\); Write-Host \"OK\")",
       "Bash(git commit -m 'fix: service worker — network-first for HTML, bust old cache *)",
-      "Bash(git commit -m 'fix: force LF line endings for shell scripts *)"
+      "Bash(git commit -m 'fix: force LF line endings for shell scripts *)",
+      "Skill(tailwind-design-system)",
+      "Skill(tailwind-design-system:*)",
+      "Bash(node scripts/gen-icons.js)",
+      "Bash(node -e \"const fs=require\\('fs'\\); const b=fs.readFileSync\\('public/icons/icon-192.png'\\); console.log\\('Size:', b.length, 'bytes'\\); console.log\\('PNG sig:', b.slice\\(0,8\\).toString\\('hex'\\) === '89504e470d0a1a0a' ? 'valid' : 'INVALID'\\);\")"
     ]
   }
 }
