@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#090909" />
+  <title>System Monitor</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    .service-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 1px; border-radius: 12px; overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .service-cell {
+      background: var(--surface); padding: 14px;
+      border-left: 3px solid var(--muted2);
+    }
+    .service-cell.online  { border-left-color: var(--green); }
+    .service-cell.offline { border-left-color: var(--red); }
+    .service-cell.unknown { border-left-color: var(--muted2); }
+    .service-cell:nth-child(1), .service-cell:nth-child(2) { border-top: none; }
+    .service-cell:nth-child(odd) { border-right: 1px solid var(--border); }
+    .service-cell + .service-cell { border-top: 1px solid var(--border); }
+    .service-cell:nth-child(even) + .service-cell:nth-child(odd) { border-top: 1px solid var(--border); }
+
+    .svc-name  { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+    .svc-val   { font-size: 14px; font-weight: 700; margin-top: 5px; }
+    .svc-val.green  { color: var(--green); }
+    .svc-val.red    { color: var(--red); }
+    .svc-val.muted  { color: var(--muted); }
+    .svc-ms    { font-size: 10px; color: var(--muted); margin-top: 3px; }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <a href="/" class="back-btn">‹</a>
+  <div class="page-title-block">
+    <div class="page-icon">📊 System Monitor</div>
+    <div class="page-title">Sistem Durumu</div>
+  </div>
+  <div class="pill">
+    <div class="dot green pulse"></div>
+    <span id="clock">—</span>
+  </div>
+</div>
+
+<!-- Sanayi Core Services -->
+<div class="section">
+  <div class="section-label">Sanayi — Core Services</div>
+  <div class="service-grid" id="sanayiGrid">
+    <div class="service-cell unknown"><div class="svc-name">API</div><div class="svc-val muted">—</div></div>
+    <div class="service-cell unknown"><div class="svc-name">Database</div><div class="svc-val muted">—</div></div>
+    <div class="service-cell unknown"><div class="svc-name">AI Model</div><div class="svc-val muted">—</div></div>
+    <div class="service-cell unknown"><div class="svc-name">Blob Storage</div><div class="svc-val muted">—</div></div>
+  </div>
+</div>
+
+<!-- Sanayi Stats -->
+<div class="section" style="margin-top:8px">
+  <div class="section-label">Sanayi — İstatistikler</div>
+  <div class="info-grid" id="sanayiStats">
+    <div class="info-cell"><div class="info-key">Bugünkü Analiz</div><div class="info-val muted" id="todayScans">—</div></div>
+    <div class="info-cell"><div class="info-key">Ort. Süre</div><div class="info-val muted" id="avgMs">—</div></div>
+    <div class="info-cell"><div class="info-key">Environment</div><div class="info-val muted" id="envVal">—</div></div>
+    <div class="info-cell"><div class="info-key">Son Hata</div><div class="info-val muted" id="lastError">—</div></div>
+  </div>
+</div>
+
+<!-- All Projects -->
+<div class="section" style="margin-top:8px">
+  <div class="section-label">Tüm Projeler</div>
+  <div class="card-list" id="projectList">
+    <div class="card unknown">
+      <div class="card-row">
+        <span class="card-name">Yükleniyor...</span>
+        <div class="spinner"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Refresh -->
+<div class="section" style="margin-top:8px">
+  <div class="btn-row">
+    <button class="btn blue" onclick="load()" id="refreshBtn">↻ Yenile</button>
+  </div>
+  <div style="font-size:10px;color:#333;text-align:center;margin-top:8px" id="lastChecked"></div>
+</div>
+
+<!-- Event Log -->
+<div class="section" style="margin-top:8px">
+  <div class="section-label">Son Olaylar</div>
+  <div class="log-strip" id="logStrip">
+    <div class="log-item"><span class="log-time">—</span><span class="log-msg">Bekleniyor...</span></div>
+  </div>
+</div>
+
+<script>
+  const events = [];
+  function addEvent(msg, type = '') {
+    events.unshift({ time: new Date().toLocaleTimeString('tr-TR'), msg, type });
+    if (events.length > 20) events.pop();
+    renderLog();
+  }
+  function renderLog() {
+    document.getElementById('logStrip').innerHTML = events.slice(0, 8).map(e =>
+      `<div class="log-item"><span class="log-time">${e.time}</span><span class="log-msg ${e.type}">${e.msg}</span></div>`
+    ).join('') || '<div class="log-item"><span class="log-msg muted">Henüz olay yok</span></div>';
+  }
+
+  function tickClock() { document.getElementById('clock').textContent = new Date().toLocaleTimeString('tr-TR'); }
+  setInterval(tickClock, 1000); tickClock();
+
+  function msChip(ms) {
+    if (!ms) return '';
+    const cls = ms < 500 ? 'green' : ms < 1500 ? 'yellow' : 'orange';
+    return `<span class="chip ${cls}">${ms}ms</span>`;
+  }
+
+  function statusVal(online, status) {
+    if (online) return `<div class="svc-val green">online</div>`;
+    if (status) return `<div class="svc-val red">HTTP ${status}</div>`;
+    return `<div class="svc-val red">offline</div>`;
+  }
+
+  async function load() {
+    const btn = document.getElementById('refreshBtn');
+    btn.textContent = '⟳ Kontrol ediliyor...'; btn.disabled = true;
+
+    try {
+      const res  = await fetch('/api/monitor/status');
+      const data = await res.json();
+
+      // Sanayi grid
+      const sg = document.getElementById('sanayiGrid');
+      sg.innerHTML = data.sanayi.services.map(s => `
+        <div class="service-cell ${s.online ? 'online' : 'unknown'}">
+          <div class="svc-name">${s.name}</div>
+          ${statusVal(s.online, s.status)}
+          <div class="svc-ms">${s.ms ? s.ms + 'ms' : s.note || ''}</div>
+        </div>
+      `).join('');
+
+      // Sanayi stats
+      const st = data.sanayi.stats;
+      document.getElementById('todayScans').textContent = st.todayScans ?? '—';
+      document.getElementById('todayScans').className   = 'info-val';
+      document.getElementById('avgMs').textContent      = st.avgMs ? st.avgMs + 'ms' : '—';
+      document.getElementById('envVal').textContent     = st.environment ?? '—';
+      document.getElementById('lastError').textContent  = st.lastError ?? 'Yok';
+      document.getElementById('lastError').className    = st.lastError ? 'info-val red' : 'info-val green';
+
+      // Projects
+      document.getElementById('projectList').innerHTML = data.projects.map(p => {
+        const state = p.online ? 'online' : 'offline';
+        return `
+          <div class="card ${state}">
+            <div class="card-row">
+              <span class="card-name">${p.name}</span>
+              <div class="badge ${state}">
+                <div class="dot ${p.online ? 'green' : 'red'}"></div>
+                ${state}
+              </div>
+            </div>
+            <div class="chips">
+              ${p.status ? `<span class="chip ${p.online ? 'green' : 'red'}">${p.status}</span>` : ''}
+              ${p.ms ? `<span class="chip ${p.ms < 500 ? 'green' : p.ms < 1500 ? 'yellow' : 'orange'}">${p.ms}ms</span>` : ''}
+              <span class="chip">${p.host}</span>
+              ${!p.online && p.errorType ? `<span class="chip red">${errorLabel(p.errorType)}</span>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('lastChecked').textContent = 'Son kontrol: ' + new Date().toLocaleTimeString('tr-TR');
+      addEvent('Sistem kontrol edildi', 'ok');
+
+      data.projects.filter(p => !p.online).forEach(p => {
+        addEvent(`${p.name} — ${errorLabel(p.errorType, p.status)}`, 'err');
+      });
+    } catch (err) {
+      addEvent('Kontrol başarısız: ' + err.message, 'err');
+    } finally {
+      btn.textContent = '↻ Yenile'; btn.disabled = false;
+    }
+  }
+
+  function errorLabel(type, status) {
+    if (status >= 500) return `HTTP ${status}`;
+    return { timeout:'Zaman aşımı', dns:'DNS hatası', refused:'Bağlantı reddedildi', reset:'Bağlantı kesildi', ssl:'SSL hatası' }[type] || type || 'Hata';
+  }
+
+  load();
+  setInterval(load, 60000);
+</script>
+</body>
+</html>

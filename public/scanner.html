@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#090909" />
+  <title>Live Scanner</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    .scanner-placeholder {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: calc(100dvh - 80px); padding: 32px;
+      text-align: center;
+    }
+    .scanner-icon { font-size: 56px; margin-bottom: 20px; opacity: 0.4; }
+    .scanner-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .scanner-desc { font-size: 12px; color: var(--muted); line-height: 1.8; max-width: 300px; }
+    .phase-tag {
+      display: inline-block; margin-top: 20px;
+      font-size: 10px; padding: 4px 12px; border-radius: 20px;
+      border: 1px solid #f59e0b33; color: var(--amber);
+      background: #f59e0b0d; letter-spacing: 0.1em;
+    }
+    .roadmap {
+      margin-top: 28px; text-align: left; width: 100%; max-width: 320px;
+    }
+    .roadmap-item {
+      display: flex; gap: 10px; align-items: flex-start;
+      padding: 8px 0; border-bottom: 1px solid var(--border);
+      font-size: 11px;
+    }
+    .roadmap-item:last-child { border-bottom: none; }
+    .roadmap-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      margin-top: 4px; flex-shrink: 0;
+    }
+    .roadmap-dot.done    { background: var(--green); }
+    .roadmap-dot.current { background: var(--amber); box-shadow: 0 0 6px #f59e0b66; }
+    .roadmap-dot.todo    { background: var(--muted2); }
+    .roadmap-text { color: var(--muted); line-height: 1.5; }
+    .roadmap-text b { color: var(--text); }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <a href="/" class="back-btn">‹</a>
+  <div class="page-title-block">
+    <div class="page-icon">📷 Live Scanner</div>
+    <div class="page-title">Hasar Tarayıcı</div>
+  </div>
+</div>
+
+<div class="scanner-placeholder">
+  <div class="scanner-icon">📷</div>
+  <div class="scanner-title">Live Damage Scanner</div>
+  <div class="scanner-desc">
+    Canlı kamera görüntüsü üzerinden AI ile araç hasarı tespiti.
+    Ekranda hasar bölgeleri kutu ve renkle işaretlenir.
+  </div>
+  <div class="phase-tag">FAZ 2 — YAPIM AŞAMASINDA</div>
+
+  <div class="roadmap">
+    <div class="roadmap-item">
+      <div class="roadmap-dot done"></div>
+      <div class="roadmap-text"><b>Faz 0</b> — Local server + web UI kurulumu</div>
+    </div>
+    <div class="roadmap-item">
+      <div class="roadmap-dot done"></div>
+      <div class="roadmap-text"><b>Faz 1</b> — System monitor + developer tools</div>
+    </div>
+    <div class="roadmap-item">
+      <div class="roadmap-dot current"></div>
+      <div class="roadmap-text"><b>Faz 2</b> — Fotoğraf çek, AI'ya gönder, sonucu göster</div>
+    </div>
+    <div class="roadmap-item">
+      <div class="roadmap-dot todo"></div>
+      <div class="roadmap-text"><b>Faz 3</b> — Canlı kamera + her 2s periyodik analiz</div>
+    </div>
+    <div class="roadmap-item">
+      <div class="roadmap-dot todo"></div>
+      <div class="roadmap-text"><b>Faz 4</b> — Sanayi backend sync + scan history</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

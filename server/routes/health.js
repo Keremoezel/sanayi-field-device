@@ -2,10 +2,11 @@ const router = require('express').Router();
 
 router.get('/', (req, res) => {
   res.json({
-    status: 'online',
-    uptime: Math.floor(process.uptime()),
-    timestamp: new Date().toISOString(),
-    version: '0.1.0',
+    status:  'online',
+    uptime:  Math.floor(process.uptime()),
+    version: '0.2.0',
+    node:    process.version,
+    ts:      new Date().toISOString(),
   });
 });
 
