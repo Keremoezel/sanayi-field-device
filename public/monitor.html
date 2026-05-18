@@ -89,6 +89,16 @@
   <div style="font-size:10px;color:#333;text-align:center;margin-top:8px" id="lastChecked"></div>
 </div>
 
+<!-- Vercel Deployments -->
+<div class="section" style="margin-top:8px">
+  <div class="section-label">Vercel — Son Deploylar</div>
+  <div class="card-list" id="vercelList">
+    <div class="card unknown">
+      <div class="card-row"><span class="card-name">Yükleniyor...</span><div class="spinner"></div></div>
+    </div>
+  </div>
+</div>
+
 <!-- Event Log -->
 <div class="section" style="margin-top:8px">
   <div class="section-label">Son Olaylar</div>
@@ -187,13 +197,61 @@
     }
   }
 
+  async function loadVercel() {
+    try {
+      const projects = await fetch('/api/vercel/projects').then(r => r.json());
+      if (projects.error) {
+        document.getElementById('vercelList').innerHTML =
+          `<div class="card unknown"><div class="card-row"><span class="card-name" style="color:var(--muted);font-size:12px">${projects.error}</span></div></div>`;
+        return;
+      }
+      document.getElementById('vercelList').innerHTML = projects.map(p => {
+        const d = p.lastDeploy;
+        const stateColor = { READY:'green', ERROR:'red', BUILDING:'yellow', CANCELED:'muted' };
+        const stateLabel = { READY:'✓ hazır', ERROR:'✗ hata', BUILDING:'⟳ derleniyor', CANCELED:'iptal' };
+        const state = d?.state ?? 'unknown';
+        const ago   = d ? timeAgo(d.createdAt) : '—';
+        const dur   = d?.buildDuration ? Math.round(d.buildDuration / 1000) + 's' : null;
+        return `
+          <div class="card ${d?.state === 'READY' ? 'online' : d?.state === 'ERROR' ? 'offline' : 'unknown'}">
+            <div class="card-row">
+              <span class="card-name">${p.name}</span>
+              <span class="badge ${stateColor[state] || 'unknown'}">${stateLabel[state] || state}</span>
+            </div>
+            ${d?.commit ? `<div class="card-sub" style="margin-top:6px">"${d.commit}"</div>` : ''}
+            <div class="chips">
+              ${d?.branch ? `<span class="chip">${d.branch}</span>` : ''}
+              ${ago !== '—' ? `<span class="chip">${ago}</span>` : ''}
+              ${dur ? `<span class="chip">${dur} build</span>` : ''}
+              ${d?.author ? `<span class="chip">${d.author}</span>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+    } catch (err) {
+      document.getElementById('vercelList').innerHTML =
+        `<div class="card unknown"><div class="card-row"><span class="card-name" style="color:var(--red);font-size:12px">Vercel API hatası: ${err.message}</span></div></div>`;
+    }
+  }
+
+  function timeAgo(ts) {
+    const diff = Date.now() - ts;
+    const m = Math.floor(diff / 60000);
+    if (m < 1)  return 'az önce';
+    if (m < 60) return m + ' dk önce';
+    const h = Math.floor(m / 60);
+    if (h < 24) return h + ' saat önce';
+    return Math.floor(h / 24) + ' gün önce';
+  }
+
   function errorLabel(type, status) {
     if (status >= 500) return `HTTP ${status}`;
     return { timeout:'Zaman aşımı', dns:'DNS hatası', refused:'Bağlantı reddedildi', reset:'Bağlantı kesildi', ssl:'SSL hatası' }[type] || type || 'Hata';
   }
 
   load();
+  loadVercel();
   setInterval(load, 60000);
+  setInterval(loadVercel, 120000);
 </script>
 </body>
 </html>

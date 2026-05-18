@@ -1,6 +1,7 @@
-const { exec } = require('child_process');
-const path     = require('path');
-const logger   = require('../services/logger');
+const { exec }    = require('child_process');
+const path        = require('path');
+const logger      = require('../services/logger');
+const { notifyUpdate } = require('../services/notifier');
 
 const ROOT        = path.join(__dirname, '../..');
 const REPO        = process.env.GITHUB_REPO || 'Keremoezel/sanayi-field-device';
@@ -61,6 +62,7 @@ async function checkForUpdate() {
 
     if (remote !== lastKnownSHA) {
       logger.log(`Yeni commit: ${remote.slice(0, 7)} → güncelleniyor`, 'ok');
+      await notifyUpdate(remote);
       await applyUpdate();
     }
   } catch (err) {

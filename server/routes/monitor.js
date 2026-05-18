@@ -1,6 +1,10 @@
 const router   = require('express').Router();
 const { ping } = require('../services/checker');
 const projects = require('../data/projects.json');
+const { notifyDown, notifyRecovered } = require('../services/notifier');
+
+// Önceki kontrol durumları (down/up geçişlerini takip etmek için)
+const prevStatus = {};
 
 // Proje health endpoint'i varsa zengin veri çek, yoksa ping ile yetин
 async function fetchHealth(project) {
@@ -43,6 +47,10 @@ async function fetchHealth(project) {
 router.get('/status', async (req, res) => {
   const results = await Promise.all(projects.map(async (p) => {
     const result = await fetchHealth(p);
+    const was = prevStatus[p.id];
+    if (was === true && !result.online)  notifyDown(p.name);
+    if (was === false && result.online)  notifyRecovered(p.name);
+    prevStatus[p.id] = result.online;
     return {
       id:       p.id,
       name:     p.name,

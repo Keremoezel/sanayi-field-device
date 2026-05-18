@@ -10,6 +10,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 app.use('/api/projects', require('./routes/projects'));
 app.use('/api/monitor',  require('./routes/monitor'));
+app.use('/api/vercel',   require('./routes/vercel'));
 app.use('/api/events',   require('./routes/events'));
 app.use('/api/tools',    require('./routes/tools'));
 app.use('/api/history',  require('./routes/history'));
