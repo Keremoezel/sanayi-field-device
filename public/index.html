@@ -11,17 +11,20 @@
   <meta name="apple-mobile-web-app-title" content="Field Device" />
   <link rel="apple-touch-icon" href="/icons/icon.svg" />
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
     :root {
       --bg: #0a0a0a;
-      --surface: #141414;
-      --border: #222;
+      --surface: #111;
+      --surface2: #161616;
+      --border: #1f1f1f;
       --text: #e5e5e5;
-      --muted: #666;
+      --muted: #555;
+      --muted2: #333;
       --green: #22c55e;
       --red: #ef4444;
       --yellow: #eab308;
+      --orange: #f97316;
       --blue: #3b82f6;
     }
 
@@ -29,359 +32,424 @@
       background: var(--bg);
       color: var(--text);
       font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
-      font-size: 14px;
+      font-size: 13px;
       min-height: 100dvh;
-      padding-bottom: 32px;
+      padding-bottom: 40px;
     }
 
+    /* ── Header ── */
     header {
-      padding: 20px 16px 12px;
+      padding: 20px 16px 14px;
       border-bottom: 1px solid var(--border);
-    }
-
-    .header-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
+    .header-label { font-size: 10px; color: var(--muted); letter-spacing: 0.14em; text-transform: uppercase; }
+    .header-name  { font-size: 19px; font-weight: 700; margin-top: 2px; }
 
-    .header-title {
-      font-size: 11px;
-      color: var(--muted);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
+    .local-pill {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 5px 10px;
+      font-size: 11px; color: var(--muted);
     }
 
-    .header-name {
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--text);
-      margin-top: 2px;
-    }
-
-    .local-status {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      color: var(--muted);
-    }
-
+    /* ── Dots ── */
     .dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--muted);
-      flex-shrink: 0;
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--muted); flex-shrink: 0;
     }
-    .dot.green { background: var(--green); box-shadow: 0 0 6px var(--green); }
-    .dot.red   { background: var(--red); }
-    .dot.pulse {
-      animation: pulse 2s ease-in-out infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
+    .dot.green  { background: var(--green); box-shadow: 0 0 6px #22c55e88; }
+    .dot.red    { background: var(--red); }
+    .dot.yellow { background: var(--yellow); }
+    .dot.pulse  { animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
 
-    section {
-      padding: 20px 16px 0;
-    }
-
+    /* ── Sections ── */
+    section { padding: 18px 16px 0; }
     .section-label {
-      font-size: 10px;
-      color: var(--muted);
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      margin-bottom: 10px;
+      font-size: 10px; color: var(--muted); letter-spacing: 0.14em;
+      text-transform: uppercase; margin-bottom: 10px;
     }
 
-    .project-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+    /* ── Project cards ── */
+    .project-list { display: flex; flex-direction: column; gap: 1px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
 
     .project-card {
       background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
       padding: 14px;
       cursor: pointer;
-      transition: border-color 0.15s;
-      text-decoration: none;
-      color: inherit;
-      display: block;
+      border-left: 3px solid transparent;
+      transition: background 0.1s, border-color 0.3s;
     }
-    .project-card:active { border-color: #444; }
+    .project-card:active { background: var(--surface2); }
+    .project-card + .project-card { border-top: 1px solid var(--border); }
+    .project-card.online  { border-left-color: var(--green); }
+    .project-card.offline { border-left-color: var(--red); }
+    .project-card.checking { border-left-color: var(--yellow); }
 
-    .project-card-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    .card-row1 {
+      display: flex; align-items: center; justify-content: space-between;
     }
+    .card-name { font-size: 14px; font-weight: 600; }
 
-    .project-name {
-      font-size: 15px;
-      font-weight: 500;
-    }
-
-    .project-badge {
-      font-size: 10px;
-      padding: 2px 7px;
-      border-radius: 4px;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      text-transform: uppercase;
+    .status-badge {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
       letter-spacing: 0.08em;
     }
+    .status-badge.online  { color: var(--green); }
+    .status-badge.offline { color: var(--red); }
+    .status-badge.checking { color: var(--yellow); }
 
-    .project-card-bottom {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    .card-row2 {
+      display: flex; align-items: center; justify-content: space-between;
       margin-top: 10px;
     }
 
-    .project-url {
-      font-size: 11px;
-      color: var(--muted);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      max-width: 200px;
+    .card-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+    .meta-chip {
+      font-size: 10px; padding: 2px 7px; border-radius: 4px;
+      border: 1px solid var(--border); color: var(--muted);
+      background: var(--surface2);
+    }
+    .meta-chip.http-ok     { color: var(--green); border-color: #22c55e33; background: #22c55e0d; }
+    .meta-chip.http-warn   { color: var(--yellow); border-color: #eab30833; background: #eab3080d; }
+    .meta-chip.http-err    { color: var(--red); border-color: #ef444433; background: #ef44440d; }
+    .meta-chip.ms-fast     { color: var(--green); border-color: #22c55e33; background: #22c55e0d; }
+    .meta-chip.ms-mid      { color: var(--yellow); border-color: #eab30833; background: #eab3080d; }
+    .meta-chip.ms-slow     { color: var(--orange); border-color: #f9731633; background: #f973160d; }
+
+    .error-chip {
+      font-size: 10px; padding: 2px 7px; border-radius: 4px;
+      color: var(--red); border: 1px solid #ef444433; background: #ef44440d;
     }
 
-    .status-pill {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 11px;
+    .history-dots { display: flex; gap: 3px; align-items: center; }
+    .h-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--muted2);
     }
+    .h-dot.up   { background: var(--green); }
+    .h-dot.down { background: var(--red); }
 
-    .status-text { color: var(--muted); }
-    .status-text.online  { color: var(--green); }
-    .status-text.offline { color: var(--red); }
-    .status-text.checking { color: var(--yellow); }
-
-    .ms-badge {
-      font-size: 10px;
-      color: var(--muted);
-    }
-
-    .refresh-btn {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      background: none;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--muted);
-      font-size: 12px;
-      font-family: inherit;
-      padding: 6px 12px;
-      cursor: pointer;
-      margin-top: 12px;
-      width: 100%;
-      justify-content: center;
-    }
-    .refresh-btn:active { background: var(--surface); }
-
-    .features-row {
-      display: flex;
-      gap: 5px;
+    .card-row3 {
       margin-top: 8px;
-      flex-wrap: wrap;
+      font-size: 10px; color: var(--muted);
     }
 
+    .features-row { display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap; }
     .feature-tag {
-      font-size: 10px;
-      padding: 2px 6px;
-      border-radius: 4px;
-      background: #1a1a1a;
-      color: #555;
-      border: 1px solid #222;
+      font-size: 10px; padding: 2px 6px; border-radius: 4px;
+      background: #1a1a1a; color: #555; border: 1px solid #222;
     }
     .feature-tag.scanner { color: #f59e0b; border-color: #f59e0b33; background: #f59e0b0d; }
-    .feature-tag.monitor { color: #3b82f6; border-color: #3b82f633; background: #3b82f60d; }
+    .feature-tag.monitor { color: var(--blue); border-color: #3b82f633; background: #3b82f60d; }
 
-    .device-info {
-      margin-top: 20px;
+    /* ── Actions ── */
+    .actions { display: flex; gap: 8px; margin-top: 12px; }
+    .btn {
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--muted); font-size: 12px; font-family: inherit;
+      padding: 9px; cursor: pointer;
+    }
+    .btn:active { background: var(--surface2); }
+    .btn.primary { border-color: #3b82f633; color: var(--blue); background: #3b82f60d; }
+
+    /* ── Device info ── */
+    .info-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 1px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border);
+    }
+    .info-cell {
       background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px;
+      padding: 12px 14px;
     }
+    .info-key { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+    .info-val { font-size: 14px; font-weight: 600; margin-top: 4px; }
+    .info-val.green { color: var(--green); }
 
-    .info-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 5px 0;
-      border-bottom: 1px solid #1a1a1a;
+    /* ── Log strip ── */
+    .log-strip {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; margin-top: 0;
     }
-    .info-row:last-child { border-bottom: none; }
-    .info-key { color: var(--muted); font-size: 12px; }
-    .info-val { font-size: 12px; color: var(--text); }
+    .log-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 10px 14px; border-bottom: 1px solid var(--border);
+      font-size: 11px;
+    }
+    .log-item:last-child { border-bottom: none; }
+    .log-time { color: var(--muted); flex-shrink: 0; padding-top: 1px; }
+    .log-msg  { color: var(--text); line-height: 1.4; }
+    .log-msg.err { color: var(--red); }
+    .log-msg.ok  { color: var(--green); }
 
+    /* ── Misc ── */
     .spinner {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border: 1.5px solid #333;
-      border-top-color: var(--yellow);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
+      display: inline-block; width: 10px; height: 10px;
+      border: 1.5px solid #333; border-top-color: var(--yellow);
+      border-radius: 50%; animation: spin 0.7s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .last-checked {
-      font-size: 10px;
-      color: #444;
-      text-align: center;
-      margin-top: 10px;
-    }
+    .last-checked { font-size: 10px; color: #333; text-align: center; margin-top: 8px; }
+
+    a { text-decoration: none; color: inherit; }
   </style>
 </head>
 <body>
 
 <header>
-  <div class="header-top">
-    <div>
-      <div class="header-title">Developer Terminal</div>
-      <div class="header-name">Field Device</div>
-    </div>
-    <div class="local-status">
-      <div class="dot green pulse" id="localDot"></div>
-      <span id="localLabel">local</span>
-    </div>
+  <div>
+    <div class="header-label">Developer Terminal</div>
+    <div class="header-name">Field Device</div>
+  </div>
+  <div class="local-pill">
+    <div class="dot green pulse" id="localDot"></div>
+    <span id="localUptime">—</span>
   </div>
 </header>
 
+<!-- Projects -->
 <section>
   <div class="section-label">Projects</div>
   <div class="project-list" id="projectList">
-    <div class="project-card" style="opacity:0.4;pointer-events:none">
-      <div class="project-card-top">
-        <span class="project-name">Yükleniyor...</span>
+    <div class="project-card checking">
+      <div class="card-row1">
+        <span class="card-name">Yükleniyor...</span>
         <div class="spinner"></div>
       </div>
     </div>
   </div>
 
-  <button class="refresh-btn" onclick="loadStatus()">
-    <span id="refreshIcon">↻</span>
-    <span id="refreshLabel">Yenile</span>
-  </button>
+  <div class="actions">
+    <button class="btn" onclick="loadStatus()" id="refreshBtn">
+      <span id="refreshIcon">↻</span>
+      <span id="refreshLabel">Yenile</span>
+    </button>
+    <button class="btn primary" onclick="window.open('/', '_self')">⟳ Tümünü Kontrol Et</button>
+  </div>
   <div class="last-checked" id="lastChecked"></div>
 </section>
 
-<section>
+<!-- Device -->
+<section style="margin-top:8px">
   <div class="section-label">Device</div>
-  <div class="device-info" id="deviceInfo">
-    <div class="info-row">
-      <span class="info-key">local server</span>
-      <span class="info-val" id="infoUptime">—</span>
+  <div class="info-grid">
+    <div class="info-cell">
+      <div class="info-key">Local Server</div>
+      <div class="info-val green">online</div>
     </div>
-    <div class="info-row">
-      <span class="info-key">address</span>
-      <span class="info-val">localhost:8787</span>
+    <div class="info-cell">
+      <div class="info-key">Uptime</div>
+      <div class="info-val" id="infoUptime">—</div>
     </div>
-    <div class="info-row">
-      <span class="info-key">version</span>
-      <span class="info-val" id="infoVersion">—</span>
+    <div class="info-cell">
+      <div class="info-key">Adres</div>
+      <div class="info-val" style="font-size:11px">localhost:8787</div>
     </div>
-    <div class="info-row">
-      <span class="info-key">time</span>
-      <span class="info-val" id="infoClock">—</span>
+    <div class="info-cell">
+      <div class="info-key">Saat</div>
+      <div class="info-val" id="infoClock">—</div>
+    </div>
+  </div>
+</section>
+
+<!-- Event Log -->
+<section style="margin-top:8px">
+  <div class="section-label">Son Olaylar</div>
+  <div class="log-strip" id="logStrip">
+    <div class="log-item">
+      <span class="log-time">—</span>
+      <span class="log-msg">Bekleniyor...</span>
     </div>
   </div>
 </section>
 
 <script>
-  function formatUptime(seconds) {
-    if (seconds < 60) return `${seconds}s`;
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
-    return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
+  // ── Uptime history (localStorage) ──
+  const HISTORY_KEY = 'fd_history';
+  const MAX_HISTORY = 10;
+
+  function getHistory(id) {
+    try {
+      return JSON.parse(localStorage.getItem(HISTORY_KEY + '_' + id) || '[]');
+    } catch { return []; }
   }
 
+  function pushHistory(id, entry) {
+    const h = getHistory(id);
+    h.push(entry);
+    if (h.length > MAX_HISTORY) h.shift();
+    localStorage.setItem(HISTORY_KEY + '_' + id, JSON.stringify(h));
+  }
+
+  // ── Event log ──
+  const events = [];
+  function addEvent(msg, type = 'info') {
+    const time = new Date().toLocaleTimeString('tr-TR');
+    events.unshift({ time, msg, type });
+    if (events.length > 20) events.pop();
+    renderLog();
+  }
+
+  function renderLog() {
+    const strip = document.getElementById('logStrip');
+    strip.innerHTML = events.slice(0, 6).map(e => `
+      <div class="log-item">
+        <span class="log-time">${e.time}</span>
+        <span class="log-msg ${e.type === 'err' ? 'err' : e.type === 'ok' ? 'ok' : ''}">${e.msg}</span>
+      </div>
+    `).join('');
+  }
+
+  // ── Clock ──
   function tickClock() {
     document.getElementById('infoClock').textContent = new Date().toLocaleTimeString('tr-TR');
   }
   setInterval(tickClock, 1000);
   tickClock();
 
+  // ── Uptime ──
+  function formatUptime(s) {
+    if (s < 60) return s + 's';
+    if (s < 3600) return Math.floor(s / 60) + 'm';
+    return Math.floor(s / 3600) + 'h ' + Math.floor((s % 3600) / 60) + 'm';
+  }
+
   async function loadLocalHealth() {
     try {
       const res = await fetch('/api/health');
       const data = await res.json();
       document.getElementById('infoUptime').textContent = formatUptime(data.uptime);
-      document.getElementById('infoVersion').textContent = `v${data.version}`;
+      document.getElementById('localUptime').textContent = formatUptime(data.uptime);
     } catch {}
   }
 
-  async function loadStatus() {
-    const btn = document.querySelector('.refresh-btn');
-    const icon = document.getElementById('refreshIcon');
-    const label = document.getElementById('refreshLabel');
-    icon.innerHTML = '<span class="spinner"></span>';
-    label.textContent = 'Kontrol ediliyor...';
-    btn.disabled = true;
-
-    try {
-      const res = await fetch('/api/projects/status');
-      const projects = await res.json();
-      renderProjects(projects);
-      document.getElementById('lastChecked').textContent =
-        `Son kontrol: ${new Date().toLocaleTimeString('tr-TR')}`;
-    } catch (err) {
-      document.getElementById('projectList').innerHTML =
-        `<div style="color:#ef4444;font-size:12px;padding:8px">Bağlantı hatası: ${err.message}</div>`;
-    } finally {
-      icon.textContent = '↻';
-      label.textContent = 'Yenile';
-      btn.disabled = false;
-    }
+  // ── Error type → Turkish ──
+  function errorLabel(type, statusCode) {
+    if (statusCode && statusCode >= 500) return `HTTP ${statusCode}`;
+    const map = {
+      timeout:      'Zaman aşımı',
+      dns:          'DNS hatası',
+      refused:      'Bağlantı reddedildi',
+      reset:        'Bağlantı kesildi',
+      ssl:          'SSL hatası',
+      server_error: 'Sunucu hatası',
+      unknown:      'Bilinmeyen hata',
+    };
+    return map[type] || type || 'Hata';
   }
 
+  // ── Response time chip class ──
+  function msClass(ms) {
+    if (!ms) return '';
+    if (ms < 500)  return 'ms-fast';
+    if (ms < 1500) return 'ms-mid';
+    return 'ms-slow';
+  }
+
+  // ── HTTP status chip class ──
+  function httpClass(status) {
+    if (!status) return '';
+    if (status < 300) return 'http-ok';
+    if (status < 500) return 'http-warn';
+    return 'http-err';
+  }
+
+  // ── Render projects ──
   function renderProjects(projects) {
     const list = document.getElementById('projectList');
     list.innerHTML = projects.map(p => {
-      const isOnline = p.online;
-      const statusClass = isOnline ? 'online' : 'offline';
-      const statusText = isOnline ? 'online' : 'offline';
-      const msText = p.ms ? `${p.ms}ms` : '';
-      const errorText = p.error ? `(${p.error})` : '';
+      const state = p.online ? 'online' : 'offline';
+      const hist  = getHistory(p.id);
+      const dots  = hist.map(h => `<div class="h-dot ${h.online ? 'up' : 'down'}"></div>`).join('');
 
       const featureTags = (p.features || []).map(f =>
         `<span class="feature-tag ${f}">${f}</span>`
       ).join('');
 
-      const urlShort = p.url.replace('https://', '');
+      const chips = [];
+      if (p.status)  chips.push(`<span class="meta-chip ${httpClass(p.status)}">${p.status}</span>`);
+      if (p.ms)      chips.push(`<span class="meta-chip ${msClass(p.ms)}">${p.ms}ms</span>`);
+      if (p.host)    chips.push(`<span class="meta-chip">${p.host}</span>`);
+
+      const errorChip = (!p.online && (p.errorType || p.error))
+        ? `<span class="error-chip">⚠ ${errorLabel(p.errorType, p.status)}</span>`
+        : '';
 
       return `
-        <a class="project-card" href="${p.url}" target="_blank" rel="noopener">
-          <div class="project-card-top">
-            <span class="project-name">${p.name}</span>
-            <span class="project-badge">${p.host}</span>
+        <a class="project-card ${state}" href="${p.url}" target="_blank" rel="noopener">
+          <div class="card-row1">
+            <span class="card-name">${p.name}</span>
+            <div class="status-badge ${state}">
+              <div class="dot ${p.online ? 'green' : 'red'}"></div>
+              ${state}
+            </div>
           </div>
           ${featureTags ? `<div class="features-row">${featureTags}</div>` : ''}
-          <div class="project-card-bottom">
-            <span class="project-url">${urlShort}</span>
-            <div class="status-pill">
-              <div class="dot ${isOnline ? 'green' : 'red'}"></div>
-              <span class="status-text ${statusClass}">${statusText}</span>
-              ${msText ? `<span class="ms-badge">${msText}</span>` : ''}
-              ${errorText ? `<span class="ms-badge">${errorText}</span>` : ''}
+          <div class="card-row2">
+            <div class="card-meta">
+              ${chips.join('')}
+              ${errorChip}
             </div>
+            <div class="history-dots" title="Son ${hist.length} kontrol">${dots}</div>
           </div>
         </a>
       `;
     }).join('');
   }
 
+  // ── Load status ──
+  let loading = false;
+  async function loadStatus() {
+    if (loading) return;
+    loading = true;
+    const btn  = document.getElementById('refreshBtn');
+    const icon = document.getElementById('refreshIcon');
+    const label= document.getElementById('refreshLabel');
+    icon.innerHTML = '<span class="spinner"></span>';
+    label.textContent = 'Kontrol ediliyor...';
+    btn.disabled = true;
+
+    try {
+      const res  = await fetch('/api/projects/status');
+      const data = await res.json();
+
+      data.forEach(p => {
+        pushHistory(p.id, { online: p.online, ms: p.ms, t: Date.now() });
+        if (!p.online) {
+          addEvent(`${p.name} — ${errorLabel(p.errorType, p.status)}`, 'err');
+        } else {
+          const last = getHistory(p.id).at(-2);
+          if (last && !last.online) addEvent(`${p.name} tekrar online`, 'ok');
+        }
+      });
+
+      renderProjects(data);
+      const now = new Date().toLocaleTimeString('tr-TR');
+      document.getElementById('lastChecked').textContent = `Son kontrol: ${now}`;
+      addEvent(`${data.length} proje kontrol edildi`, 'info');
+    } catch (err) {
+      addEvent(`Kontrol başarısız: ${err.message}`, 'err');
+    } finally {
+      icon.textContent = '↻';
+      label.textContent = 'Yenile';
+      btn.disabled = false;
+      loading = false;
+    }
+  }
+
+  // ── Init ──
+  addEvent('Field Device başlatıldı', 'ok');
   loadLocalHealth();
   loadStatus();
   setInterval(loadStatus, 60000);
+  setInterval(loadLocalHealth, 10000);
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js');
