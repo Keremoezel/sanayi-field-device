@@ -1,5 +1,11 @@
-const CACHE  = 'field-device-v3';
-const STATIC = ['/style.css', '/manifest.json', '/icons/icon.svg'];
+const CACHE  = 'field-device-v4';
+const STATIC = [
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(STATIC)));
@@ -18,7 +24,7 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const { pathname } = new URL(e.request.url);
 
-  // API: her zaman network
+  // API: her zaman network, offline'da hata dön
   if (pathname.startsWith('/api/')) {
     e.respondWith(
       fetch(e.request).catch(() =>
@@ -30,16 +36,18 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // HTML sayfalar: her zaman network, bağlantı yoksa cache
-  if (e.request.mode === 'navigate') {
-    e.respondWith(
-      fetch(e.request).catch(() => caches.match(e.request))
-    );
-    return;
-  }
-
-  // CSS / ikonlar: cache-first
+  // HTML + statik dosyalar: cache-first, arka planda güncelle (stale-while-revalidate)
   e.respondWith(
-    caches.match(e.request).then((cached) => cached || fetch(e.request))
+    caches.open(CACHE).then(async (cache) => {
+      const cached = await cache.match(e.request);
+      const fetchPromise = fetch(e.request).then((res) => {
+        if (res.ok) cache.put(e.request, res.clone());
+        return res;
+      }).catch(() => null);
+
+      // Cache varsa hemen dön, arka planda yenile
+      // Cache yoksa network'ü bekle
+      return cached || fetchPromise;
+    })
   );
 });
