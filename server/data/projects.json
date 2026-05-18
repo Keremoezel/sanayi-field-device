@@ -1,0 +1,20 @@
+[
+  {
+    "id": "sanayi",
+    "name": "Sanayi Uygulaması",
+    "url": "https://sanayi-uygulamasi.vercel.app",
+    "healthPath": "/",
+    "host": "vercel",
+    "color": "#3b82f6",
+    "features": ["scanner", "monitor"]
+  },
+  {
+    "id": "zanzibar",
+    "name": "Zanzibar Barış Derneği",
+    "url": "https://www.zanzibarbarisdernegi.org.tr",
+    "healthPath": "/",
+    "host": "coolify",
+    "color": "#10b981",
+    "features": []
+  }
+]

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <title>Field Device</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --border: #222;
+      --text: #e5e5e5;
+      --muted: #666;
+      --green: #22c55e;
+      --red: #ef4444;
+      --yellow: #eab308;
+      --blue: #3b82f6;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+      font-size: 14px;
+      min-height: 100dvh;
+      padding-bottom: 32px;
+    }
+
+    header {
+      padding: 20px 16px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-title {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .header-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+      margin-top: 2px;
+    }
+
+    .local-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--muted);
+      flex-shrink: 0;
+    }
+    .dot.green { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .dot.red   { background: var(--red); }
+    .dot.pulse {
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    section {
+      padding: 20px 16px 0;
+    }
+
+    .section-label {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .project-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .project-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .project-card:active { border-color: #444; }
+
+    .project-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .project-name {
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .project-badge {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .project-card-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+
+    .project-url {
+      font-size: 11px;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 200px;
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+    }
+
+    .status-text { color: var(--muted); }
+    .status-text.online  { color: var(--green); }
+    .status-text.offline { color: var(--red); }
+    .status-text.checking { color: var(--yellow); }
+
+    .ms-badge {
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .refresh-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-family: inherit;
+      padding: 6px 12px;
+      cursor: pointer;
+      margin-top: 12px;
+      width: 100%;
+      justify-content: center;
+    }
+    .refresh-btn:active { background: var(--surface); }
+
+    .features-row {
+      display: flex;
+      gap: 5px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .feature-tag {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #1a1a1a;
+      color: #555;
+      border: 1px solid #222;
+    }
+    .feature-tag.scanner { color: #f59e0b; border-color: #f59e0b33; background: #f59e0b0d; }
+    .feature-tag.monitor { color: #3b82f6; border-color: #3b82f633; background: #3b82f60d; }
+
+    .device-info {
+      margin-top: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-key { color: var(--muted); font-size: 12px; }
+    .info-val { font-size: 12px; color: var(--text); }
+
+    .spinner {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border: 1.5px solid #333;
+      border-top-color: var(--yellow);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .last-checked {
+      font-size: 10px;
+      color: #444;
+      text-align: center;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div>
+      <div class="header-title">Developer Terminal</div>
+      <div class="header-name">Field Device</div>
+    </div>
+    <div class="local-status">
+      <div class="dot green pulse" id="localDot"></div>
+      <span id="localLabel">local</span>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="section-label">Projects</div>
+  <div class="project-list" id="projectList">
+    <div class="project-card" style="opacity:0.4;pointer-events:none">
+      <div class="project-card-top">
+        <span class="project-name">Yükleniyor...</span>
+        <div class="spinner"></div>
+      </div>
+    </div>
+  </div>
+
+  <button class="refresh-btn" onclick="loadStatus()">
+    <span id="refreshIcon">↻</span>
+    <span id="refreshLabel">Yenile</span>
+  </button>
+  <div class="last-checked" id="lastChecked"></div>
+</section>
+
+<section>
+  <div class="section-label">Device</div>
+  <div class="device-info" id="deviceInfo">
+    <div class="info-row">
+      <span class="info-key">local server</span>
+      <span class="info-val" id="infoUptime">—</span>
+    </div>
+    <div class="info-row">
+      <span class="info-key">address</span>
+      <span class="info-val">localhost:8787</span>
+    </div>
+    <div class="info-row">
+      <span class="info-key">version</span>
+      <span class="info-val" id="infoVersion">—</span>
+    </div>
+    <div class="info-row">
+      <span class="info-key">time</span>
+      <span class="info-val" id="infoClock">—</span>
+    </div>
+  </div>
+</section>
+
+<script>
+  function formatUptime(seconds) {
+    if (seconds < 60) return `${seconds}s`;
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
+    return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
+  }
+
+  function tickClock() {
+    document.getElementById('infoClock').textContent = new Date().toLocaleTimeString('tr-TR');
+  }
+  setInterval(tickClock, 1000);
+  tickClock();
+
+  async function loadLocalHealth() {
+    try {
+      const res = await fetch('/api/health');
+      const data = await res.json();
+      document.getElementById('infoUptime').textContent = formatUptime(data.uptime);
+      document.getElementById('infoVersion').textContent = `v${data.version}`;
+    } catch {}
+  }
+
+  async function loadStatus() {
+    const btn = document.querySelector('.refresh-btn');
+    const icon = document.getElementById('refreshIcon');
+    const label = document.getElementById('refreshLabel');
+    icon.innerHTML = '<span class="spinner"></span>';
+    label.textContent = 'Kontrol ediliyor...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch('/api/projects/status');
+      const projects = await res.json();
+      renderProjects(projects);
+      document.getElementById('lastChecked').textContent =
+        `Son kontrol: ${new Date().toLocaleTimeString('tr-TR')}`;
+    } catch (err) {
+      document.getElementById('projectList').innerHTML =
+        `<div style="color:#ef4444;font-size:12px;padding:8px">Bağlantı hatası: ${err.message}</div>`;
+    } finally {
+      icon.textContent = '↻';
+      label.textContent = 'Yenile';
+      btn.disabled = false;
+    }
+  }
+
+  function renderProjects(projects) {
+    const list = document.getElementById('projectList');
+    list.innerHTML = projects.map(p => {
+      const isOnline = p.online;
+      const statusClass = isOnline ? 'online' : 'offline';
+      const statusText = isOnline ? 'online' : 'offline';
+      const msText = p.ms ? `${p.ms}ms` : '';
+      const errorText = p.error ? `(${p.error})` : '';
+
+      const featureTags = (p.features || []).map(f =>
+        `<span class="feature-tag ${f}">${f}</span>`
+      ).join('');
+
+      const urlShort = p.url.replace('https://', '');
+
+      return `
+        <a class="project-card" href="${p.url}" target="_blank" rel="noopener">
+          <div class="project-card-top">
+            <span class="project-name">${p.name}</span>
+            <span class="project-badge">${p.host}</span>
+          </div>
+          ${featureTags ? `<div class="features-row">${featureTags}</div>` : ''}
+          <div class="project-card-bottom">
+            <span class="project-url">${urlShort}</span>
+            <div class="status-pill">
+              <div class="dot ${isOnline ? 'green' : 'red'}"></div>
+              <span class="status-text ${statusClass}">${statusText}</span>
+              ${msText ? `<span class="ms-badge">${msText}</span>` : ''}
+              ${errorText ? `<span class="ms-badge">${errorText}</span>` : ''}
+            </div>
+          </div>
+        </a>
+      `;
+    }).join('');
+  }
+
+  loadLocalHealth();
+  loadStatus();
+  setInterval(loadStatus, 60000);
+</script>
+</body>
+</html>
