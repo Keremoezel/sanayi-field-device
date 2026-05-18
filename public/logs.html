@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#090909" />
+  <title>Logs</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    .project-tab-bar {
+      display: flex; gap: 6px; overflow-x: auto; padding: 0 16px;
+      margin-bottom: 0; scrollbar-width: none;
+    }
+    .project-tab-bar::-webkit-scrollbar { display: none; }
+    .ptab {
+      flex-shrink: 0; padding: 6px 14px; border-radius: 8px;
+      font-size: 11px; font-family: inherit; cursor: pointer;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .ptab.active { background: #3b82f615; border-color: #3b82f633; color: var(--blue); }
+
+    .event-feed { display: flex; flex-direction: column; gap: 1px; }
+    .event-row {
+      display: grid; grid-template-columns: 52px 60px 1fr;
+      gap: 8px; align-items: start;
+      padding: 9px 14px; background: var(--surface);
+      border-bottom: 1px solid var(--border); font-size: 11px;
+    }
+    .event-row:first-child { border-radius: 12px 12px 0 0; }
+    .event-row:last-child  { border-radius: 0 0 12px 12px; border-bottom: none; }
+    .event-row:only-child  { border-radius: 12px; border-bottom: none; }
+
+    .ev-time   { color: var(--muted); font-size: 10px; padding-top: 1px; }
+    .ev-type   { }
+    .ev-msg    { color: var(--text); line-height: 1.4; word-break: break-word; }
+    .ev-meta   { font-size: 10px; color: var(--muted); margin-top: 3px; }
+    .ev-user   { color: var(--blue); }
+
+    .type-badge {
+      display: inline-block; font-size: 9px; padding: 1px 5px;
+      border-radius: 3px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .type-auth  { background: #3b82f615; color: var(--blue);   border: 1px solid #3b82f633; }
+    .type-error { background: #ef444415; color: var(--red);    border: 1px solid #ef444433; }
+    .type-warn  { background: #eab30815; color: var(--yellow); border: 1px solid #eab30833; }
+    .type-info  { background: #22c55e15; color: var(--green);  border: 1px solid #22c55e33; }
+
+    .action-label {
+      font-size: 11px; font-weight: 600;
+    }
+    .action-label.login_success { color: var(--green); }
+    .action-label.login_failed  { color: var(--red); }
+    .action-label.logout        { color: var(--muted); }
+    .action-label.register      { color: var(--blue); }
+    .action-label.error         { color: var(--red); }
+
+    .project-label {
+      font-size: 9px; color: var(--muted); padding: 4px 16px 0;
+      text-transform: uppercase; letter-spacing: 0.1em;
+    }
+
+    .no-endpoint {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px; text-align: center;
+      font-size: 11px; color: var(--muted); line-height: 2;
+    }
+    code {
+      background: var(--surface2); padding: 1px 5px; border-radius: 3px;
+      font-family: inherit; color: var(--text); font-size: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <a href="/" class="back-btn">‹</a>
+  <div class="page-title-block">
+    <div class="page-icon">📋 Logs</div>
+    <div class="page-title">Uygulama Logları</div>
+  </div>
+  <div class="pill" id="clock">—</div>
+</div>
+
+<!-- Proje sekmeleri -->
+<div class="section" style="padding-bottom:10px">
+  <div class="project-tab-bar" id="tabBar">
+    <button class="ptab active" onclick="showAll(this)">Tümü</button>
+  </div>
+</div>
+
+<!-- Log feed -->
+<div style="padding: 0 16px" id="feedWrap">
+  <div style="text-align:center;padding:40px;color:var(--muted);font-size:12px">
+    <div class="spinner" style="width:16px;height:16px;border-width:2px;margin:0 auto 12px"></div>
+    Loglar yükleniyor...
+  </div>
+</div>
+
+<div style="padding: 16px">
+  <button class="btn full" onclick="load()">↻ Yenile</button>
+</div>
+
+<script>
+  let allData = [];
+  let activeId = null;
+
+  function tickClock() { document.getElementById('clock').textContent = new Date().toLocaleTimeString('tr-TR'); }
+  setInterval(tickClock, 1000); tickClock();
+
+  function formatTime(ts) {
+    return new Date(ts).toLocaleTimeString('tr-TR');
+  }
+
+  function actionLabel(action) {
+    const map = {
+      login_success: '✓ Giriş yapıldı',
+      login_failed:  '✗ Giriş başarısız',
+      logout:        '← Çıkış yapıldı',
+      register:      '+ Kayıt olundu',
+      db_error:      'DB hatası',
+      api_error:     'API hatası',
+    };
+    return map[action] || action;
+  }
+
+  function renderEvent(ev, projectName) {
+    const typeMap = { auth:'type-auth', error:'type-error', warn:'type-warn', info:'type-info' };
+    const typeClass = typeMap[ev.type] || 'type-info';
+    const actionClass = ev.action.replace(/[^a-z_]/g, '');
+
+    let meta = '';
+    if (ev.email) meta += `<span class="ev-user">${ev.email}</span>  `;
+    if (ev.userId) meta += `uid:${ev.userId}  `;
+    if (ev.ip) meta += `${ev.ip}  `;
+    if (ev.meta?.message) meta += ev.meta.message;
+    if (projectName) meta += `  <span style="color:var(--muted)">[${projectName}]</span>`;
+
+    return `
+      <div class="event-row">
+        <div class="ev-time">${formatTime(ev.ts)}</div>
+        <div class="ev-type"><span class="type-badge ${typeClass}">${ev.type}</span></div>
+        <div class="ev-msg">
+          <span class="action-label ${actionClass}">${actionLabel(ev.action)}</span>
+          ${meta ? `<div class="ev-meta">${meta}</div>` : ''}
+        </div>
+      </div>`;
+  }
+
+  function render(data) {
+    const wrap = document.getElementById('feedWrap');
+
+    // Proje tab'ları oluştur
+    const tabBar = document.getElementById('tabBar');
+    const existingTabs = [...tabBar.querySelectorAll('[data-id]')].map(t => t.dataset.id);
+    data.forEach(p => {
+      if (!existingTabs.includes(p.id)) {
+        const btn = document.createElement('button');
+        btn.className = 'ptab';
+        btn.dataset.id = p.id;
+        btn.textContent = p.name.split(' ')[0];
+        btn.onclick = function() { showProject(p.id, this); };
+        tabBar.appendChild(btn);
+      }
+    });
+
+    renderFeed(data, activeId);
+  }
+
+  function renderFeed(data, filterId) {
+    const wrap = document.getElementById('feedWrap');
+
+    const toShow = filterId ? data.filter(p => p.id === filterId) : data;
+
+    let html = '';
+    for (const proj of toShow) {
+      if (proj.error) {
+        html += `
+          <div class="no-endpoint" style="margin-bottom:8px">
+            <strong>${proj.name}</strong><br>
+            <code>/api/field-logs</code> endpoint bulunamadı<br>
+            <span style="font-size:10px">templates/nuxt-field-log.ts dosyasını projeye ekle</span>
+          </div>`;
+        continue;
+      }
+      if (!proj.events?.length) {
+        html += `<div class="no-endpoint" style="margin-bottom:8px">${proj.name} — henüz log yok</div>`;
+        continue;
+      }
+      html += `<div class="project-label">${proj.name}</div>`;
+      html += `<div class="event-feed" style="margin-bottom:8px;border-radius:12px;overflow:hidden;border:1px solid var(--border)">`;
+      html += proj.events.map(ev => renderEvent(ev, null)).join('');
+      html += `</div>`;
+    }
+
+    wrap.innerHTML = html || `<div style="text-align:center;padding:40px;color:var(--muted);font-size:12px">Log bulunamadı</div>`;
+  }
+
+  function showAll(btn) {
+    activeId = null;
+    document.querySelectorAll('.ptab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    renderFeed(allData, null);
+  }
+
+  function showProject(id, btn) {
+    activeId = id;
+    document.querySelectorAll('.ptab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    renderFeed(allData, id);
+  }
+
+  async function load() {
+    try {
+      const data = await fetch('/api/events').then(r => r.json());
+      allData = data;
+      render(data);
+    } catch (err) {
+      document.getElementById('feedWrap').innerHTML =
+        `<div style="color:var(--red);padding:20px;font-size:12px">Hata: ${err.message}</div>`;
+    }
+  }
+
+  load();
+  setInterval(load, 30000);
+</script>
+</body>
+</html>

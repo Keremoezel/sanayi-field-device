@@ -9,7 +9,8 @@
       "Bash(git commit -m ' *)",
       "Bash(gh repo *)",
       "Bash(timeout 3 node server/index.js)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "PowerShell(Stop-Process -Id \\(Get-NetTCPConnection -LocalPort 8787 -ErrorAction SilentlyContinue\\).OwningProcess -Force -ErrorAction SilentlyContinue; Start-Sleep -Milliseconds 500; cd \"d:\\\\All Projects\\\\sanayitelefon\"; $p = Start-Process node -ArgumentList \"server/index.js\" -PassThru -NoNewWindow; Start-Sleep -Seconds 2; $p.Kill\\(\\); Write-Host \"OK\")"
     ]
   }
 }
