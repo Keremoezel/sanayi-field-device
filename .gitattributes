@@ -1,0 +1,4 @@
+* text=auto
+
+scripts/*.sh text eol=lf
+templates/*.ts text eol=lf
