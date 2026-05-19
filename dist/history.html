@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#090909" />
+  <title>Scan History</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    .scan-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px; margin-bottom: 8px;
+      border-left: 3px solid var(--muted2);
+    }
+    .scan-card.low    { border-left-color: var(--yellow); }
+    .scan-card.medium { border-left-color: var(--orange); }
+    .scan-card.high   { border-left-color: var(--red); }
+    .scan-top { display: flex; align-items: center; justify-content: space-between; }
+    .scan-id  { font-size: 12px; color: var(--muted); }
+    .scan-date { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    .scan-summary { font-size: 12px; margin-top: 8px; color: var(--text); line-height: 1.4; }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <a href="/" class="back-btn">‹</a>
+  <div class="page-title-block">
+    <div class="page-icon">🗂 Scan History</div>
+    <div class="page-title">Tarama Geçmişi</div>
+  </div>
+  <div class="pill" id="count">0 tarama</div>
+</div>
+
+<div class="section">
+  <div id="scanList"></div>
+</div>
+
+<script>
+  const severityLabel = { low: 'Düşük Risk', medium: 'Orta Risk', high: 'Yüksek Risk' };
+  const severityChip  = { low: 'yellow', medium: 'orange', high: 'red' };
+
+  async function load() {
+    try {
+      const scans = await fetch('/api/history').then(r => r.json());
+      document.getElementById('count').textContent = scans.length + ' tarama';
+      const list = document.getElementById('scanList');
+      if (!scans.length) {
+        list.innerHTML = `
+          <div class="empty">
+            <span class="empty-icon">📷</span>
+            Henüz tarama yok.<br>
+            Live Scanner'dan ilk taramayı yap.
+          </div>`;
+        return;
+      }
+      list.innerHTML = scans.map(s => `
+        <div class="scan-card ${s.severity || ''}">
+          <div class="scan-top">
+            <span class="scan-id">Scan #${s.id}</span>
+            <div class="chips" style="margin:0">
+              <span class="chip ${severityChip[s.severity] || ''}">${severityLabel[s.severity] || s.severity || '—'}</span>
+              ${s.maxConfidence ? `<span class="chip">%${Math.round(s.maxConfidence * 100)} güven</span>` : ''}
+              ${s.synced ? `<span class="chip green">✓ gönderildi</span>` : `<span class="chip">local</span>`}
+            </div>
+          </div>
+          <div class="scan-date">${new Date(s.createdAt).toLocaleString('tr-TR')}</div>
+          ${s.summary ? `<div class="scan-summary">${s.summary}</div>` : ''}
+        </div>
+      `).join('');
+    } catch {
+      document.getElementById('scanList').innerHTML =
+        '<div class="empty"><span class="empty-icon">⚠️</span>Geçmiş yüklenemedi.</div>';
+    }
+  }
+
+  load();
+</script>
+</body>
+</html>

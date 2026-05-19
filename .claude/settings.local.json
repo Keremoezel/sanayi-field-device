@@ -21,7 +21,8 @@
       "Read(//d/All Projects/Sanayi-uygulamasi/server/**)",
       "Bash(ls \"D:\\\\All Projects\\\\Sanayi-uygulamasi\\\\server\\\\api\\\\Termux\" 2>/dev/null || echo \"no termux dir\" && cat \"D:\\\\All Projects\\\\Sanayi-uygulamasi\\\\.env\" 2>/dev/null | grep -v \"=\" || echo \"no .env or empty\")",
       "Read(//d/All Projects/Sanayi-uygulamasi/**)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(npm run *)"
     ]
   }
 }

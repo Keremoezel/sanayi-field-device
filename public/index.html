@@ -3,18 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#080810" />
+  <meta name="theme-color" content="#06060f" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Field Device" />
   <link rel="manifest" href="/manifest.json" />
-  <!-- <link rel="apple-touch-icon" href="/icons/icon-192.png" /> -->
   <title>Sanayi Field Device</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
 
-<!-- ─── Header ──────────────────────────────────── -->
+<!-- ─── Header ───────────────────────────────── -->
 <header id="header">
   <div class="header-brand">
     <div class="header-label">Sanayi</div>
@@ -29,17 +28,17 @@
   </div>
 </header>
 
-<!-- ─── Main Content ────────────────────────────── -->
+<!-- ─── Main Content ─────────────────────────── -->
 <main id="main">
 
   <!-- ── SCANNER TAB ── -->
   <div class="tab-page" id="tab-scanner">
     <div class="sec">Live Damage Scanner</div>
-    <div class="card" style="padding:0; overflow:hidden;">
+    <div class="card">
       <div class="scanner-wrap">
         <video id="scanVideo" class="scanner-video" autoplay playsinline muted></video>
         <canvas id="scanCanvas" class="scanner-canvas"></canvas>
-        <div class="scanner-overlay" id="scanOverlay">
+        <div class="scanner-overlay">
           <div class="scanner-corner tl"></div>
           <div class="scanner-corner tr"></div>
           <div class="scanner-corner bl"></div>
@@ -47,30 +46,28 @@
         </div>
         <div id="scanPlaceholder" class="scanner-placeholder">
           <div class="scanner-icon">📷</div>
-          <div style="font-size:14px; font-weight:600">Kamera Kapalı</div>
-          <div style="font-size:12px; color:var(--c-t2)">Hasar taraması için kamerayı açın</div>
+          <div class="scanner-label">Kamera Kapalı</div>
+          <div class="scanner-hint">Hasar taraması için kamerayı açın</div>
         </div>
       </div>
     </div>
-    
+
     <div class="scan-btn-row" id="scanControlsStart">
       <button class="scan-btn blue" onclick="startCamera()">Kamerayı Aç</button>
     </div>
-    
-    <div class="scan-btn-row" id="scanControlsAction" style="display:none;">
-      <button class="scan-btn primary" id="btnCapture" onclick="captureAndAnalyze()">📸 Fotoğraf Çek & Analiz Et</button>
+
+    <div class="scan-btn-row" id="scanControlsAction" style="display:none">
+      <button class="scan-btn primary" id="btnCapture" onclick="captureAndAnalyze()">📸 Fotoğraf Çek &amp; Analiz Et</button>
       <button class="scan-btn secondary" onclick="stopCamera()">Kapat</button>
     </div>
 
-    <div id="scanResult" style="display:none;">
+    <div id="scanResult" style="display:none">
       <div class="scan-result-bar">
         <div>
-          <span style="color:var(--c-t2)">Son Analiz:</span>
-          <span id="resTime" style="font-weight:600; font-family:var(--mono); margin-left:6px">az önce</span>
+          <span class="scan-result-label">Son Analiz:</span>
+          <span class="scan-result-time" id="resTime">az önce</span>
         </div>
-        <div>
-          <span id="resRiskBadge" class="tag" style="font-size:12px; padding:3px 8px;">—</span>
-        </div>
+        <span id="resRiskBadge" class="tag">—</span>
       </div>
       <div class="scan-btn-row">
         <button class="scan-btn secondary" id="btnSave" onclick="saveScanLocal()">💾 Yerel Kaydet</button>
@@ -100,10 +97,22 @@
 
     <div class="sec">Sanayi Servisleri</div>
     <div class="svc-grid" id="sanayiGrid">
-      <div class="svc-card unknown"><div class="svc-name">API</div><div class="svc-val muted">—</div></div>
-      <div class="svc-card unknown"><div class="svc-name">Database</div><div class="svc-val muted">—</div></div>
-      <div class="svc-card unknown"><div class="svc-name">AI Model</div><div class="svc-val muted">—</div></div>
-      <div class="svc-card unknown"><div class="svc-name">Blob</div><div class="svc-val muted">—</div></div>
+      <div class="svc-card unknown" data-svc="api">
+        <div class="svc-name">API</div>
+        <div class="svc-val unknown">—</div>
+      </div>
+      <div class="svc-card unknown" data-svc="database">
+        <div class="svc-name">Database</div>
+        <div class="svc-val unknown">—</div>
+      </div>
+      <div class="svc-card unknown" data-svc="ai">
+        <div class="svc-name">AI Model</div>
+        <div class="svc-val unknown">—</div>
+      </div>
+      <div class="svc-card unknown" data-svc="blob">
+        <div class="svc-name">Blob</div>
+        <div class="svc-val unknown">—</div>
+      </div>
     </div>
 
     <div class="sec">Ortam Bilgisi (Sanayi)</div>
@@ -128,18 +137,24 @@
 
     <div class="sec">Projelerim</div>
     <div class="group" id="projectList">
-      <div class="row"><div class="row-body"><div class="row-title" style="color:var(--c-t3)">Yükleniyor...</div></div><div class="spin"></div></div>
+      <div class="row">
+        <div class="row-body"><div class="row-title" style="color:var(--c-t3)">Yükleniyor...</div></div>
+        <div class="spin"></div>
+      </div>
     </div>
 
     <div class="sec">Vercel Deploylar</div>
     <div class="group" id="vercelList">
-      <div class="row"><div class="row-body"><div class="row-title" style="color:var(--c-t3)">Yükleniyor...</div></div><div class="spin"></div></div>
+      <div class="row">
+        <div class="row-body"><div class="row-title" style="color:var(--c-t3)">Yükleniyor...</div></div>
+        <div class="spin"></div>
+      </div>
     </div>
 
-    <div style="margin-top:16px;display:flex;gap:8px">
-      <button class="action-btn" style="flex:1;flex-direction:row;align-items:center;padding:12px 16px;justify-content:center" onclick="loadMonitor()">
+    <div style="margin-top:16px">
+      <button class="action-btn action-btn-inline" style="width:100%" onclick="loadMonitor()">
         <span style="color:var(--c-blue);font-size:16px">↻</span>
-        <span style="font-size:14px;font-weight:600;color:var(--c-t1)">Hemen Yenile</span>
+        <span class="action-title">Hemen Yenile</span>
       </button>
     </div>
     <div class="countdown-wrap"><div class="countdown-bar" id="monitorCountdown"></div></div>
@@ -168,14 +183,16 @@
       <button class="ftab" data-type="warn" onclick="filterLogType('warn', this)">Warn</button>
       <button class="ftab" data-type="info" onclick="filterLogType('info', this)">Info</button>
     </div>
-    
+
     <div class="group" id="logFeed" style="margin-bottom:12px">
-      <div class="log-row"><div class="log-time">—</div><div class="log-body"><div class="log-msg" style="color:var(--c-t3)">Yükleniyor...</div></div></div>
+      <div class="log-row">
+        <div class="log-body"><div class="log-msg" style="color:var(--c-t3)">Yükleniyor...</div></div>
+      </div>
     </div>
-    
-    <button class="action-btn" style="width:100%;flex-direction:row;align-items:center;padding:12px 16px;gap:8px;justify-content:center" onclick="loadLogs()">
+
+    <button class="action-btn action-btn-inline" style="width:100%" onclick="loadLogs()">
       <span style="color:var(--c-blue)">↻</span>
-      <span style="font-size:14px;font-weight:600;color:var(--c-t1)">Logları Yenile</span>
+      <span class="action-title">Logları Yenile</span>
     </button>
   </div>
 
@@ -240,19 +257,19 @@
     <div class="sec">Yönetim</div>
     <div class="group">
       <div class="row tap" onclick="triggerUpdate()">
-        <div class="row-icon" style="background:#34d98815">🔃</div>
+        <div class="row-icon" style="background:rgba(52,217,136,.08)">🔃</div>
         <div class="row-body"><div class="row-title" style="color:var(--c-green)">Git Update Kontrolü</div></div>
       </div>
       <a class="row tap" href="/api/tools/logs/export" target="_blank">
-        <div class="row-icon" style="background:#4f8ef715">📤</div>
+        <div class="row-icon" style="background:rgba(79,142,247,.08)">📤</div>
         <div class="row-body"><div class="row-title" style="color:var(--c-blue)">Logları Dışa Aktar (JSON)</div></div>
       </a>
       <div class="row tap" onclick="clearLogs()">
-        <div class="row-icon" style="background:#ffcc0015">🗑</div>
+        <div class="row-icon" style="background:rgba(255,204,0,.08)">🗑</div>
         <div class="row-body"><div class="row-title" style="color:var(--c-yellow)">Yerel Logları Temizle</div></div>
       </div>
       <div class="row tap" onclick="restartServer()">
-        <div class="row-icon" style="background:#ff5b5b15">🔄</div>
+        <div class="row-icon" style="background:rgba(255,91,91,.08)">🔄</div>
         <div class="row-body"><div class="row-title" style="color:var(--c-red)">Sunucuyu Yeniden Başlat</div></div>
       </div>
     </div>
@@ -260,7 +277,7 @@
 
 </main>
 
-<!-- ─── Bottom Navigation ────────────────────────── -->
+<!-- ─── Bottom Navigation ─────────────────────── -->
 <nav id="nav">
   <button class="nav-btn" data-tab="scanner" onclick="gotoTab('scanner', this)">
     <span class="nav-icon">📷</span>
@@ -285,22 +302,21 @@
   </button>
 </nav>
 
-<!-- ─── General Modal ────────────────────────────── -->
+<!-- ─── Modal ────────────────────────────────── -->
 <div class="modal-overlay" id="modal">
   <div class="modal-sheet">
+    <div class="modal-handle"></div>
     <div class="modal-header">
       <div class="modal-title" id="modalTitle">Detay</div>
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
-    <div class="modal-body" id="modalBody">
-      <!-- İçerik dinamik eklenecek -->
-    </div>
+    <div class="modal-body" id="modalBody"></div>
   </div>
 </div>
 
-<!-- ─── Scripts ─────────────────────────────────── -->
+<!-- ─── Scripts ──────────────────────────────── -->
 <script>
-// --- Navigation & Core UI ---
+// ── Navigation ──────────────────────────────────
 let currentTab = 'monitor';
 const tabLoaders = { monitor: loadMonitor, history: loadHistory, logs: loadLogs, tools: loadTools };
 
@@ -318,27 +334,27 @@ function gotoTab(tab, btn) {
 
 // Clock
 setInterval(() => {
-  document.getElementById('hClock').textContent = new Date().toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
+  document.getElementById('hClock').textContent =
+    new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
 }, 1000);
 
 function fmtTime(s) {
-  if (s < 60) return s + 's';
-  if (s < 3600) return Math.floor(s/60) + 'm ' + (s%60) + 's';
-  return Math.floor(s/3600) + 'h ' + Math.floor((s%3600)/60) + 'm';
+  if (s < 60)   return s + 's';
+  if (s < 3600) return Math.floor(s / 60) + 'm ' + (s % 60) + 's';
+  return Math.floor(s / 3600) + 'h ' + Math.floor((s % 3600) / 60) + 'm';
 }
 
 function timeAgo(dateStr) {
-  const ts = new Date(dateStr).getTime();
-  const diff = Math.floor((Date.now() - ts) / 1000);
-  if (diff < 60) return diff + ' sn önce';
-  const m = Math.floor(diff/60);
-  if (m < 60) return m + ' dk önce';
-  const h = Math.floor(m/60);
-  if (h < 24) return h + ' saat önce';
-  return Math.floor(h/24) + ' gün önce';
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (diff < 60)   return diff + ' sn önce';
+  const m = Math.floor(diff / 60);
+  if (m < 60)      return m + ' dk önce';
+  const h = Math.floor(m / 60);
+  if (h < 24)      return h + ' saat önce';
+  return Math.floor(h / 24) + ' gün önce';
 }
 
-// Modals
+// ── Modal ────────────────────────────────────────
 function openModal(title, contentHTML) {
   document.getElementById('modalTitle').textContent = title;
   document.getElementById('modalBody').innerHTML = contentHTML;
@@ -347,8 +363,11 @@ function openModal(title, contentHTML) {
 function closeModal() {
   document.getElementById('modal').classList.remove('show');
 }
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal')) closeModal();
+});
 
-// --- Monitor Tab ---
+// ── Monitor Tab ──────────────────────────────────
 let monitorTimer = null;
 let monitorCountdown = 30;
 
@@ -356,17 +375,17 @@ async function loadMonitor() {
   clearInterval(monitorTimer);
   monitorCountdown = 30;
   updateCountdownBar();
-  
+
   try {
-    const data = await fetch('/api/monitor/status').then(r=>r.json());
+    const data = await fetch('/api/monitor/status').then(r => r.json());
     renderSanayi(data.sanayi);
     renderProjects(data.projects);
-  } catch(e) { console.error('Monitor err:', e); }
-  
+  } catch (e) { console.error('Monitor err:', e); }
+
   try {
-    const vdata = await fetch('/api/vercel/projects').then(r=>r.json());
+    const vdata = await fetch('/api/vercel/projects').then(r => r.json());
     renderVercel(vdata);
-  } catch(e) { console.error('Vercel err:', e); }
+  } catch (e) { console.error('Vercel err:', e); }
 
   monitorTimer = setInterval(() => {
     monitorCountdown--;
@@ -376,59 +395,67 @@ async function loadMonitor() {
 }
 
 function updateCountdownBar() {
-  const pct = (monitorCountdown / 30) * 100;
-  document.getElementById('monitorCountdown').style.transform = `scaleX(${pct/100})`;
+  document.getElementById('monitorCountdown').style.transform =
+    `scaleX(${monitorCountdown / 30})`;
+}
+
+function svcKey(name) {
+  const n = (name || '').toLowerCase();
+  if (n.includes('database') || n.includes('db')) return 'database';
+  if (n.includes('ai') || n.includes('model'))    return 'ai';
+  if (n.includes('blob') || n.includes('storage')) return 'blob';
+  return 'api';
 }
 
 function renderSanayi(sanayi) {
   if (!sanayi) return;
-  // Services
   const grid = document.getElementById('sanayiGrid');
   grid.innerHTML = (sanayi.services || []).map(s => {
     const ok = s.online === true ? 'ok' : s.online === false ? 'down' : 'unknown';
-    return `<div class="svc-card ${ok}" onclick="showServiceDetail('${s.name}', '${ok}', '${s.ms}')">
+    const key = svcKey(s.name);
+    return `<div class="svc-card ${ok}" data-svc="${key}"
+        onclick="showServiceDetail('${s.name}', '${ok}', '${s.ms}')">
       <div class="svc-name">${s.name}</div>
-      <div class="svc-val ${ok}">${ok==='ok'?'Online':ok==='down'?'Offline':'Bilinmiyor'}</div>
-      <div class="svc-ms">${s.ms?s.ms+'ms':(s.note||'')}</div>
+      <div class="svc-val ${ok}">${ok === 'ok' ? 'Online' : ok === 'down' ? 'Offline' : '—'}</div>
+      <div class="svc-ms">${s.ms ? s.ms + 'ms' : (s.note || '')}</div>
     </div>`;
   }).join('');
 
-  // Stats
   const st = sanayi.stats || {};
-  document.getElementById('stEnv').textContent = st.environment || '—';
-  document.getElementById('stVer').textContent = st.version || '—';
-  document.getElementById('stScans').textContent = st.todayScans ?? '—';
-  document.getElementById('stAvg').textContent = st.avgMs ? `${st.avgMs}ms` : '—';
+  document.getElementById('stEnv').textContent   = st.environment || '—';
+  document.getElementById('stVer').textContent   = st.version     || '—';
+  document.getElementById('stScans').textContent = st.todayScans  ?? '—';
+  document.getElementById('stAvg').textContent   = st.avgMs ? `${st.avgMs}ms` : '—';
 }
 
 function showServiceDetail(name, status, ms) {
   openModal(`Servis: ${name}`, `
     <div class="modal-field">
       <div class="modal-key">Durum</div>
-      <div class="modal-val ${status==='ok'?'deploy-ready':'deploy-error'}">${status.toUpperCase()}</div>
+      <div class="modal-val ${status === 'ok' ? 'deploy-ready' : 'deploy-error'}">${status.toUpperCase()}</div>
     </div>
     <div class="modal-field">
       <div class="modal-key">Yanıt Süresi</div>
-      <div class="modal-val">${ms !== 'null' ? ms+'ms' : '—'}</div>
+      <div class="modal-val">${ms !== 'null' ? ms + 'ms' : '—'}</div>
     </div>
   `);
 }
 
 function renderProjects(projects) {
   const list = document.getElementById('projectList');
-  list.innerHTML = projects.map(p => {
+  list.innerHTML = (projects || []).map(p => {
     const isOk = p.online;
     return `<div class="row tap" onclick="showProjectModal('${p.name}', '${p.url}', ${isOk}, '${p.ms}')">
       <div class="row-body">
         <div class="row-title">${p.name}</div>
         <div class="tags" style="margin-top:5px">
           ${p.host ? `<span class="tag">${p.host}</span>` : ''}
-          ${p.ms ? `<span class="tag ${p.ms<500?'green':p.ms<1500?'yellow':'orange'}">${p.ms}ms</span>` : ''}
+          ${p.ms   ? `<span class="tag ${p.ms < 500 ? 'green' : p.ms < 1500 ? 'yellow' : 'orange'}">${p.ms}ms</span>` : ''}
         </div>
       </div>
-      <div class="badge ${isOk?'online':'offline'}">
-        <div class="led ${isOk?'green':'red'}"></div>
-        ${isOk?'online':'offline'}
+      <div class="badge ${isOk ? 'online' : 'offline'}">
+        <div class="led ${isOk ? 'green' : 'red'}"></div>
+        ${isOk ? 'online' : 'offline'}
       </div>
     </div>`;
   }).join('');
@@ -436,33 +463,40 @@ function renderProjects(projects) {
 
 function showProjectModal(name, url, isOk, ms) {
   openModal(name, `
-    <div class="modal-field"><div class="modal-key">URL</div><div class="modal-val"><a href="${url}" target="_blank" style="color:var(--c-blue)">${url}</a></div></div>
-    <div class="modal-field"><div class="modal-key">Durum</div><div class="modal-val">${isOk?'Online':'Offline'} (${ms}ms)</div></div>
+    <div class="modal-field"><div class="modal-key">URL</div>
+      <div class="modal-val"><a href="${url}" target="_blank" style="color:var(--c-blue)">${url}</a></div>
+    </div>
+    <div class="modal-field"><div class="modal-key">Durum</div>
+      <div class="modal-val">${isOk ? 'Online' : 'Offline'} (${ms}ms)</div>
+    </div>
   `);
 }
 
 function renderVercel(data) {
   const list = document.getElementById('vercelList');
   if (data.error) {
-    list.innerHTML = `<div class="row"><div class="row-body"><div class="row-title" style="color:var(--c-red);font-size:13px">${data.error}</div></div></div>`;
+    list.innerHTML = `<div class="row"><div class="row-body">
+      <div class="row-title" style="color:var(--c-red);font-size:13px">${data.error}</div>
+    </div></div>`;
     return;
   }
+  const stateColor = { READY: 'deploy-ready', ERROR: 'deploy-error', BUILDING: 'deploy-building', CANCELED: 'deploy-canceled' };
+  const stateLbl  = { READY: '✓ Hazır', ERROR: '✗ Hata', BUILDING: '⟳ Derleniyor', CANCELED: 'İptal' };
   list.innerHTML = data.map(p => {
-    const d = p.lastDeploy;
-    const st = d?.state || 'UNKNOWN';
-    const stateColor = {READY:'deploy-ready', ERROR:'deploy-error', BUILDING:'deploy-building', CANCELED:'deploy-canceled'};
-    const stateLbl = {READY:'✓ Hazır', ERROR:'✗ Hata', BUILDING:'⟳ Derleniyor', CANCELED:'İptal'};
+    const d   = p.lastDeploy;
+    const st  = d?.state || 'UNKNOWN';
     const ago = d ? timeAgo(d.createdAt) : '—';
-    return `<div class="row tap" onclick="showDeployModal('${p.name}', '${st}', '${d?.commit?.replace(/'/g,"")}', '${d?.author}', '${ago}')">
+    return `<div class="row tap"
+        onclick="showDeployModal('${p.name}','${st}','${(d?.commit||'').replace(/'/g,'')}','${d?.author||''}','${ago}')">
       <div class="row-body">
         <div class="row-title">${p.name}</div>
         ${d?.commit ? `<div class="row-sub" style="margin-top:3px">"${d.commit}"</div>` : ''}
         <div class="tags" style="margin-top:5px">
           ${d?.branch ? `<span class="tag">${d.branch}</span>` : ''}
-          ${ago !== '—' ? `<span class="tag">${ago}</span>` : ''}
+          ${ago !== '—'  ? `<span class="tag">${ago}</span>` : ''}
         </div>
       </div>
-      <div class="badge ${stateColor[st]||'deploy-canceled'}" style="flex-shrink:0">${stateLbl[st]||st}</div>
+      <div class="badge ${stateColor[st] || 'deploy-canceled'}" style="flex-shrink:0">${stateLbl[st] || st}</div>
     </div>`;
   }).join('');
 }
@@ -476,58 +510,46 @@ function showDeployModal(name, state, commit, author, ago) {
   `);
 }
 
-// --- Logs Tab ---
+// ── Logs Tab ─────────────────────────────────────
 let allLogs = { remote: [], local: [] };
 let logFilters = { src: 'all', type: 'all' };
 
 async function loadLogs() {
   try {
     const [remoteData, localData] = await Promise.all([
-      fetch('/api/events').then(r=>r.json()),
-      fetch('/api/tools/logs').then(r=>r.json())
+      fetch('/api/events').then(r => r.json()),
+      fetch('/api/tools/logs').then(r => r.json())
     ]);
-    
-    // Normalize remote
+
     const normRemote = [];
-    if(Array.isArray(remoteData)){
+    if (Array.isArray(remoteData)) {
       remoteData.forEach(p => {
-        if(p.events) {
-          p.events.forEach(e => {
-            normRemote.push({
-              _source: 'remote',
-              _project: p.name,
-              id: e.id || Math.random(),
-              ts: e.ts,
-              type: e.type, // auth, error, warn, info
-              msg: e.action || 'Event',
-              meta: [e.email, e.ip, e.meta?.message].filter(Boolean).join(' '),
-              raw: e
-            });
+        (p.events || []).forEach(e => {
+          normRemote.push({
+            _source: 'remote', _project: p.name,
+            id: e.id || Math.random(), ts: e.ts,
+            type: e.type, msg: e.action || 'Event',
+            meta: [e.email, e.ip, e.meta?.message].filter(Boolean).join(' '),
+            raw: e
           });
-        }
+        });
       });
     }
 
-    // Normalize local
     const normLocal = localData.map(l => ({
-      _source: 'local',
-      _project: 'Field Device',
-      id: l.ts + Math.random(),
-      ts: l.ts,
-      type: l.type === 'err' ? 'error' : (l.type === 'ok' ? 'info' : l.type), // err, warn, ok, info
-      msg: l.msg,
-      meta: l.time,
-      raw: l
+      _source: 'local', _project: 'Field Device',
+      id: l.ts + Math.random(), ts: l.ts,
+      type: l.type === 'err' ? 'error' : l.type === 'ok' ? 'info' : l.type,
+      msg: l.msg, meta: l.time, raw: l
     }));
 
     allLogs.remote = normRemote;
-    allLogs.local = normLocal;
+    allLogs.local  = normLocal;
     applyLogFilters();
-    
-    // Reset badge
+
     document.getElementById('logBadge').classList.remove('show');
     document.getElementById('logBadge').textContent = '0';
-  } catch(e) { console.error('Log fetch err:', e); }
+  } catch (e) { console.error('Log fetch err:', e); }
 }
 
 function filterLogSource(src, btn) {
@@ -548,47 +570,50 @@ function applyLogFilters() {
   let combined = [];
   if (logFilters.src === 'all' || logFilters.src === 'remote') combined = combined.concat(allLogs.remote);
   if (logFilters.src === 'all' || logFilters.src === 'device') combined = combined.concat(allLogs.local);
-  
-  if (logFilters.type !== 'all') {
-    combined = combined.filter(l => l.type === logFilters.type);
-  }
-  
-  combined.sort((a,b) => b.ts - a.ts);
+  if (logFilters.type !== 'all') combined = combined.filter(l => l.type === logFilters.type);
+  combined.sort((a, b) => b.ts - a.ts);
   renderLogFeed(combined);
 }
 
 function renderLogFeed(logs) {
   const feed = document.getElementById('logFeed');
   if (!logs.length) {
-    feed.innerHTML = `<div class="log-row"><div class="log-body"><div class="log-msg" style="color:var(--c-t3)">Bu filtrede log bulunamadı.</div></div></div>`;
+    feed.innerHTML = `<div class="log-row">
+      <div class="log-body"><div class="log-msg" style="color:var(--c-t3)">Bu filtrede log bulunamadı.</div></div>
+    </div>`;
     return;
   }
-  
   feed.innerHTML = logs.map(l => {
-    const time = new Date(l.ts).toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
-    let colorClass = '';
-    if (l.type === 'error') colorClass = 'err';
-    else if (l.type === 'warn') colorClass = 'warn';
-    else if (l.type === 'info') colorClass = 'ok';
-    else if (l.type === 'auth') colorClass = 'auth';
-    
+    const time = new Date(l.ts).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+    let msgClass = '';
+    if      (l.type === 'error') msgClass = 'err';
+    else if (l.type === 'warn')  msgClass = 'warn';
+    else if (l.type === 'info')  msgClass = 'ok';
+    else if (l.type === 'auth')  msgClass = 'auth';
+
+    const rowClass = l.type === 'error' ? 'has-err'
+      : l.type === 'warn' ? 'has-warn'
+      : l.type === 'auth' ? 'has-auth'
+      : (l.type === 'info' || l.type === 'ok') ? 'has-info' : '';
+
     const safeRaw = JSON.stringify(l.raw).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
-    
-    return `<div class="log-row" onclick="showLogModal('${l._project}', '${l.type}', '${l.msg}', '${safeRaw}')">
+    return `<div class="log-row ${rowClass}"
+        onclick="showLogModal('${l._project}','${l.type}','${l.msg}','${safeRaw}')">
       <div class="log-time">${time}</div>
       <div class="log-body">
-        <div class="log-msg ${colorClass}">${l.msg}</div>
-        <div class="log-meta">${l._project} ${l.meta ? '· '+l.meta : ''}</div>
+        <div class="log-msg ${msgClass}">${l.msg}</div>
+        <div class="log-meta">${l._project}${l.meta ? ' · ' + l.meta : ''}</div>
       </div>
-      <span class="tag" style="align-self:flex-start">${l.type}</span>
+      <span class="tag">${l.type}</span>
     </div>`;
   }).join('');
 }
 
 function showLogModal(project, type, msg, rawJson) {
   let rawStr = '';
-  try { rawStr = JSON.stringify(JSON.parse(rawJson), null, 2); } catch(e){ rawStr = rawJson; }
-  openModal(`Log Detayı`, `
+  try { rawStr = JSON.stringify(JSON.parse(rawJson.replace(/&quot;/g, '"').replace(/&#39;/g, "'")), null, 2); }
+  catch { rawStr = rawJson; }
+  openModal('Log Detayı', `
     <div class="modal-field"><div class="modal-key">Proje</div><div class="modal-val">${project}</div></div>
     <div class="modal-field"><div class="modal-key">Tip</div><div class="modal-val">${type.toUpperCase()}</div></div>
     <div class="modal-field"><div class="modal-key">Mesaj</div><div class="modal-val">${msg}</div></div>
@@ -599,76 +624,74 @@ function showLogModal(project, type, msg, rawJson) {
   `);
 }
 
-
-// --- Tools Tab ---
+// ── Tools Tab ────────────────────────────────────
 async function loadTools() {
   try {
-    const data = await fetch('/api/tools/status').then(r=>r.json());
+    const data = await fetch('/api/tools/status').then(r => r.json());
     document.getElementById('toolVersion').textContent = 'v' + data.version;
-    document.getElementById('toolUptime').textContent = fmtTime(data.uptime);
-    document.getElementById('toolNode').textContent = data.node;
-    document.getElementById('toolMem').textContent = data.memory + ' MB';
-    document.getElementById('toolRepo').textContent = data.repo || 'Bilinmiyor';
-    document.getElementById('toolCommit').textContent = data.commit ? `${data.commit} (${timeAgo(new Date(data.commitAge))})` : '—';
-    document.getElementById('toolEnv').textContent = data.env;
-  } catch(e) { console.error('Tools err:', e); }
+    document.getElementById('toolUptime').textContent  = fmtTime(data.uptime);
+    document.getElementById('toolNode').textContent    = data.node;
+    document.getElementById('toolMem').textContent     = data.memory + ' MB';
+    document.getElementById('toolRepo').textContent    = data.repo   || 'Bilinmiyor';
+    document.getElementById('toolCommit').textContent  = data.commit
+      ? `${data.commit} (${timeAgo(new Date(data.commitAge))})` : '—';
+    document.getElementById('toolEnv').textContent     = data.env;
+  } catch (e) { console.error('Tools err:', e); }
 }
 
 async function pingNode(id) {
   const box = document.getElementById('pingResult');
   box.style.display = 'block';
-  box.className = 'ping-result';
-  box.textContent = `Ping gönderiliyor → ${id}...`;
+  box.className     = 'ping-result';
+  box.textContent   = `Ping → ${id}...`;
   try {
-    const d = await fetch(`/api/tools/ping/${id}`).then(r=>r.json());
+    const d = await fetch(`/api/tools/ping/${id}`).then(r => r.json());
     if (d.online) {
-      box.className = 'ping-result ok';
+      box.className   = 'ping-result ok';
       box.textContent = `✓ ${d.name}\nHTTP ${d.status} · ${d.ms}ms\n${d.url}`;
     } else {
-      box.className = 'ping-result err';
-      box.textContent = `✗ ${d.name||id}\n${d.errorType||d.error||'offline'} · ${d.ms}ms`;
+      box.className   = 'ping-result err';
+      box.textContent = `✗ ${d.name || id}\n${d.errorType || d.error || 'offline'} · ${d.ms}ms`;
     }
-  } catch(e) {
-    box.className = 'ping-result err';
+  } catch {
+    box.className   = 'ping-result err';
     box.textContent = '✗ Bağlantı hatası';
   }
 }
 
 async function pingAll() {
-  pingNode('sanayi'); // For simplicity, just pinging one to show UI. In full version, fetch all and aggregate.
+  pingNode('sanayi');
 }
 
 async function triggerUpdate() {
-  if(!confirm('Güncelleme kontrolü başlatılsın mı?')) return;
+  if (!confirm('Güncelleme kontrolü başlatılsın mı?')) return;
   try {
-    const res = await fetch('/api/tools/update', {method:'POST'}).then(r=>r.json());
+    const res = await fetch('/api/tools/update', { method: 'POST' }).then(r => r.json());
     alert(res.note);
-  } catch(e){ alert('Hata: '+e.message); }
+  } catch (e) { alert('Hata: ' + e.message); }
 }
 
 async function clearLogs() {
-  if(!confirm('Yerel logları silmek istediğinize emin misiniz?')) return;
-  await fetch('/api/tools/logs', {method:'DELETE'});
+  if (!confirm('Yerel logları silmek istediğinize emin misiniz?')) return;
+  await fetch('/api/tools/logs', { method: 'DELETE' });
   alert('Loglar temizlendi');
   loadLogs();
 }
 
 async function restartServer() {
-  if(!confirm('Sunucuyu yeniden başlatmak istediğinize emin misiniz?')) return;
-  await fetch('/api/tools/restart', {method:'POST'});
+  if (!confirm('Sunucuyu yeniden başlatmak istediğinize emin misiniz?')) return;
+  await fetch('/api/tools/restart', { method: 'POST' });
   alert('Sunucu kapatılıyor, lütfen manuel yeniden başlatın.');
 }
 
-
-// --- History Tab ---
+// ── History Tab ──────────────────────────────────
 let currentHistFilter = 'all';
 
 async function loadHistory() {
   try {
-    const res = await fetch('/api/scanner/history');
-    const scans = await res.json();
+    const scans = await fetch('/api/scanner/history').then(r => r.json());
     renderHistory(scans);
-  } catch(e) { console.error('History err:', e); }
+  } catch (e) { console.error('History err:', e); }
 }
 
 function filterHistory(filter, btn) {
@@ -680,34 +703,42 @@ function filterHistory(filter, btn) {
 
 function renderHistory(scans) {
   const list = document.getElementById('historyList');
-  
   let filtered = scans;
-  if(currentHistFilter === 'synced') filtered = scans.filter(s => s.synced);
-  if(currentHistFilter === 'local') filtered = scans.filter(s => !s.synced);
-  
-  if(!filtered.length) {
-    list.innerHTML = `<div class="empty"><div class="empty-icon">🗂</div><div class="empty-title">Kayıt Bulunamadı</div><div class="empty-sub">Bu filtrede gösterilecek tarama yok.</div></div>`;
+  if (currentHistFilter === 'synced') filtered = scans.filter(s => s.synced);
+  if (currentHistFilter === 'local')  filtered = scans.filter(s => !s.synced);
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty">
+      <div class="empty-icon">🗂</div>
+      <div class="empty-title">Kayıt Bulunamadı</div>
+      <div class="empty-sub">Bu filtrede gösterilecek tarama yok.</div>
+    </div>`;
     return;
   }
 
+  const sColor = { low: 'tag green', medium: 'tag orange', high: 'tag red' };
+  const sLbl   = { low: 'Düşük Risk', medium: 'Orta Risk', high: 'Yüksek Risk' };
+
   list.innerHTML = filtered.map(s => {
-    const sColor = {low:'tag green', medium:'tag orange', high:'tag red'};
-    const sLbl = {low:'Düşük Risk', medium:'Orta Risk', high:'Yüksek Risk'};
-    const riskTag = s.severity ? `<span class="${sColor[s.severity]||'tag'}">${sLbl[s.severity]||s.severity}</span>` : '';
-    const confTag = s.maxConfidence ? `<span class="tag">%${Math.round(s.maxConfidence*100)} güven</span>` : '';
-    const syncTag = s.synced ? `<span class="tag blue">✓ Gönderildi</span>` : `<span class="tag">Yerel</span>`;
-    
+    const riskTag = s.severity
+      ? `<span class="${sColor[s.severity] || 'tag'}">${sLbl[s.severity] || s.severity}</span>` : '';
+    const confTag = s.maxConfidence
+      ? `<span class="tag">%${Math.round(s.maxConfidence * 100)} güven</span>` : '';
+    const syncTag = s.synced
+      ? `<span class="tag blue">✓ Gönderildi</span>`
+      : `<span class="tag">Yerel</span>`;
+
     return `<div class="scan-card" onclick="showScanModal(${s.id})">
-      ${s.annotatedUrl || s.imageUrl ? `<img src="${s.annotatedUrl || s.imageUrl}" class="scan-card-thumb">` : '<div class="scan-card-thumb">📷</div>'}
+      ${s.annotatedUrl || s.imageUrl
+        ? `<img src="${s.annotatedUrl || s.imageUrl}" class="scan-card-thumb">`
+        : '<div class="scan-card-thumb">📷</div>'}
       <div class="scan-card-body">
         <div class="scan-card-top">
           <div class="scan-card-id">Scan #${s.id}</div>
           <div class="scan-card-time">${timeAgo(s.createdAt)}</div>
         </div>
-        ${s.summary ? `<div style="font-size:12px; color:var(--c-t2); margin-bottom:8px">${s.summary}</div>` : ''}
-        <div class="tags">
-          ${riskTag} ${confTag} ${syncTag}
-        </div>
+        ${s.summary ? `<div class="scan-card-summary">${s.summary}</div>` : ''}
+        <div class="tags">${riskTag} ${confTag} ${syncTag}</div>
       </div>
     </div>`;
   }).join('');
@@ -716,109 +747,99 @@ function renderHistory(scans) {
 async function showScanModal(id) {
   openModal('Yükleniyor...', '<div class="spin"></div>');
   try {
-    const s = await fetch('/api/scanner/'+id).then(r=>r.json());
-    if(s.error) return openModal('Hata', s.error);
-    
+    const s = await fetch('/api/scanner/' + id).then(r => r.json());
+    if (s.error) return openModal('Hata', s.error);
     openModal(`Scan #${s.id}`, `
-      ${s.annotatedUrl || s.imageUrl ? `<img src="${s.annotatedUrl || s.imageUrl}" style="width:100%; border-radius:var(--radius-sm); margin-bottom:12px">` : ''}
-      <div class="modal-field"><div class="modal-key">Tarih</div><div class="modal-val">${new Date(s.createdAt).toLocaleString('tr-TR')}</div></div>
-      <div class="modal-field"><div class="modal-key">Risk Seviyesi</div><div class="modal-val">${s.severity || 'Bilinmiyor'}</div></div>
-      <div class="modal-field"><div class="modal-key">Özet</div><div class="modal-val">${s.summary || '—'}</div></div>
-      ${!s.synced ? `<button class="scan-btn blue" style="width:100%; margin-top:12px" onclick="syncScan(${s.id})">📤 Backend'e Gönder</button>` : ''}
-      <button class="scan-btn secondary" style="width:100%; margin-top:8px" onclick="deleteScan(${s.id})">🗑 Sil</button>
+      ${s.annotatedUrl || s.imageUrl
+        ? `<img src="${s.annotatedUrl || s.imageUrl}" style="width:100%;border-radius:var(--radius-sm);margin-bottom:12px">`
+        : ''}
+      <div class="modal-field"><div class="modal-key">Tarih</div>
+        <div class="modal-val">${new Date(s.createdAt).toLocaleString('tr-TR')}</div>
+      </div>
+      <div class="modal-field"><div class="modal-key">Risk Seviyesi</div>
+        <div class="modal-val">${s.severity || 'Bilinmiyor'}</div>
+      </div>
+      <div class="modal-field"><div class="modal-key">Özet</div>
+        <div class="modal-val">${s.summary || '—'}</div>
+      </div>
+      ${!s.synced
+        ? `<button class="scan-btn blue" style="width:100%;margin-top:12px" onclick="syncScan(${s.id})">📤 Backend'e Gönder</button>`
+        : ''}
+      <button class="scan-btn secondary" style="width:100%;margin-top:8px" onclick="deleteScan(${s.id})">🗑 Sil</button>
     `);
-  } catch(e) { openModal('Hata', 'Kayıt okunamadı'); }
+  } catch { openModal('Hata', 'Kayıt okunamadı'); }
 }
 
 async function syncScan(id) {
   try {
-    const res = await fetch(`/api/scanner/${id}/sync`, {method:'POST'}).then(r=>r.json());
-    if(res.error) alert(res.error);
+    const res = await fetch(`/api/scanner/${id}/sync`, { method: 'POST' }).then(r => r.json());
+    if (res.error) alert(res.error);
     else { alert('Başarıyla senkronize edildi'); closeModal(); loadHistory(); }
-  } catch(e){ alert('Bağlantı hatası'); }
+  } catch { alert('Bağlantı hatası'); }
 }
 
 async function deleteScan(id) {
-  if(!confirm('Bu kaydı silmek istiyor musunuz?')) return;
-  await fetch('/api/scanner/'+id, {method:'DELETE'});
+  if (!confirm('Bu kaydı silmek istiyor musunuz?')) return;
+  await fetch('/api/scanner/' + id, { method: 'DELETE' });
   closeModal();
   loadHistory();
 }
 
-
-// --- Scanner Tab (Phase 2 Camera Logic) ---
+// ── Scanner Tab ──────────────────────────────────
 let stream = null;
-const video = document.getElementById('scanVideo');
+const video  = document.getElementById('scanVideo');
 const canvas = document.getElementById('scanCanvas');
-const ctx = canvas.getContext('2d');
-let currentBlob = null;
+const ctx    = canvas.getContext('2d');
+let currentBlob     = null;
 let currentScanData = null;
 
 async function startCamera() {
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ 
-      video: { facingMode: 'environment', width: { ideal: 1280 } } 
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1280 } }
     });
     video.srcObject = stream;
-    document.getElementById('scanPlaceholder').style.display = 'none';
-    document.getElementById('scanControlsStart').style.display = 'none';
-    document.getElementById('scanControlsAction').style.display = 'flex';
-    document.getElementById('scanResult').style.display = 'none';
-    ctx.clearRect(0, 0, canvas.width, canvas.height); // Temizle
-  } catch (err) {
-    alert('Kamera açılamadı: ' + err.message);
-  }
+    document.getElementById('scanPlaceholder').style.display     = 'none';
+    document.getElementById('scanControlsStart').style.display   = 'none';
+    document.getElementById('scanControlsAction').style.display  = 'flex';
+    document.getElementById('scanResult').style.display          = 'none';
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  } catch (err) { alert('Kamera açılamadı: ' + err.message); }
 }
 
 function stopCamera() {
-  if (stream) {
-    stream.getTracks().forEach(t => t.stop());
-    video.srcObject = null;
-  }
-  document.getElementById('scanPlaceholder').style.display = 'flex';
-  document.getElementById('scanControlsStart').style.display = 'flex';
-  document.getElementById('scanControlsAction').style.display = 'none';
-  document.getElementById('scanResult').style.display = 'none';
+  if (stream) { stream.getTracks().forEach(t => t.stop()); video.srcObject = null; }
+  document.getElementById('scanPlaceholder').style.display     = 'flex';
+  document.getElementById('scanControlsStart').style.display   = 'flex';
+  document.getElementById('scanControlsAction').style.display  = 'none';
+  document.getElementById('scanResult').style.display          = 'none';
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
 function captureAndAnalyze() {
   if (!stream) return;
-  
   const btn = document.getElementById('btnCapture');
-  btn.disabled = true;
+  btn.disabled    = true;
   btn.textContent = '⏳ Analiz Ediliyor...';
 
-  // Canvas'a çiz
-  canvas.width = video.videoWidth;
+  canvas.width  = video.videoWidth;
   canvas.height = video.videoHeight;
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-  
-  // Resmi dondurmak için videoyu duraklat (opsiyonel)
-  // video.pause();
 
   canvas.toBlob(async (blob) => {
     currentBlob = blob;
     const formData = new FormData();
     formData.append('image', blob, 'scan.jpg');
     formData.append('mode', 'photo');
-
     try {
-      const res = await fetch('/api/scanner/analyze', {
-        method: 'POST',
-        body: formData
-      });
+      const res  = await fetch('/api/scanner/analyze', { method: 'POST', body: formData });
       const data = await res.json();
-      
-      if (res.ok) {
-        showScanResult(data);
-      } else {
-        alert('Hata: ' + (data.error || 'Bilinmeyen hata'));
-      }
+      if (res.ok) showScanResult(data);
+      else alert('Hata: ' + (data.error || 'Bilinmeyen hata'));
     } catch (err) {
       alert('Bağlantı hatası: ' + err.message);
     } finally {
-      btn.disabled = false;
+      btn.disabled    = false;
       btn.textContent = '📸 Tekrar Çek & Analiz Et';
     }
   }, 'image/jpeg', 0.8);
@@ -828,61 +849,79 @@ function showScanResult(data) {
   currentScanData = data;
   document.getElementById('scanResult').style.display = 'block';
   document.getElementById('resTime').textContent = new Date().toLocaleTimeString('tr-TR');
-  
-  const badge = document.getElementById('resRiskBadge');
-  const sev = data.severity || 'low';
-  badge.textContent = `${sev.toUpperCase()} RİSK (%${Math.round((data.maxConfidence||0)*100)})`;
-  badge.className = 'tag ' + (sev==='high'?'red':sev==='medium'?'orange':'green');
 
-  // Çizim yap (Detections)
+  const sev   = data.severity || 'low';
+  const badge = document.getElementById('resRiskBadge');
+  badge.textContent = `${sev.toUpperCase()} RİSK (%${Math.round((data.maxConfidence || 0) * 100)})`;
+  badge.className   = 'tag ' + (sev === 'high' ? 'red' : sev === 'medium' ? 'orange' : 'green');
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height); // Altına tekrar çiz
-  
-  if (data.detections && data.detections.length > 0) {
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  if (data.detections?.length) {
+    const color = sev === 'high' ? '#ff5b5b' : sev === 'medium' ? '#ff8c42' : '#ffcc00';
     data.detections.forEach(d => {
-      if(d.box) {
-        ctx.strokeStyle = sev==='high'?'#ff5b5b':sev==='medium'?'#ff8c42':'#ffcc00';
-        ctx.lineWidth = 4;
+      if (d.box) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth   = 4;
         ctx.strokeRect(d.box.x, d.box.y, d.box.width, d.box.height);
-        
-        ctx.fillStyle = ctx.strokeStyle;
-        ctx.font = '16px Inter';
-        ctx.fillText(`${Math.round(d.confidence*100)}%`, d.box.x, d.box.y > 20 ? d.box.y - 5 : d.box.y + 20);
+        ctx.fillStyle = color;
+        ctx.font      = '16px Inter';
+        ctx.fillText(`${Math.round(d.confidence * 100)}%`,
+          d.box.x, d.box.y > 20 ? d.box.y - 5 : d.box.y + 20);
       }
     });
   }
 }
 
 async function saveScanLocal() {
-  if(!currentScanData) return;
+  if (!currentScanData) return;
   alert(`Tarama yerel olarak kaydedildi (ID: ${currentScanData.localId})`);
   document.getElementById('btnSave').disabled = true;
 }
 
 async function sendScanSanayi() {
-  if(!currentScanData || !currentScanData.localId) return;
+  if (!currentScanData?.localId) return;
+  const btn = document.getElementById('btnSend');
+  btn.disabled    = true;
+  btn.textContent = 'Gönderiliyor...';
   try {
-    document.getElementById('btnSend').disabled = true;
-    document.getElementById('btnSend').textContent = 'Gönderiliyor...';
-    
-    const res = await fetch(`/api/scanner/${currentScanData.localId}/sync`, {method:'POST'}).then(r=>r.json());
-    if(res.error) {
+    const res = await fetch(`/api/scanner/${currentScanData.localId}/sync`, { method: 'POST' }).then(r => r.json());
+    if (res.error) {
       alert(res.error);
-      document.getElementById('btnSend').disabled = false;
-      document.getElementById('btnSend').textContent = '📤 Sanayi\'ye Gönder';
+      btn.disabled    = false;
+      btn.textContent = "📤 Sanayi'ye Gönder";
     } else {
-      alert('Başarıyla gönderildi!');
-      document.getElementById('btnSend').textContent = '✓ Gönderildi';
+      btn.textContent = '✓ Gönderildi';
     }
-  } catch(e) {
+  } catch {
     alert('Hata');
-    document.getElementById('btnSend').disabled = false;
-    document.getElementById('btnSend').textContent = '📤 Sanayi\'ye Gönder';
+    btn.disabled    = false;
+    btn.textContent = "📤 Sanayi'ye Gönder";
   }
 }
 
+// ── PWA Install Prompt ───────────────────────────
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBanner').classList.add('show');
+});
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  if (outcome === 'accepted') document.getElementById('installBanner').classList.remove('show');
+});
 
-// Init app
+// ── Service Worker ───────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+
+// ── Init ─────────────────────────────────────────
 loadMonitor();
 </script>
 

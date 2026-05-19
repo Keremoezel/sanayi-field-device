@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#090909" />
+  <title>Developer Tools</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    .tool-list { display: flex; flex-direction: column; gap: 1px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+    .tool-item {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--surface); padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .tool-item:last-child { border-bottom: none; }
+    .tool-left  { display: flex; flex-direction: column; gap: 3px; }
+    .tool-name  { font-size: 13px; font-weight: 600; }
+    .tool-desc  { font-size: 11px; color: var(--muted); }
+    .tool-btn {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 7px; color: var(--muted); font-size: 11px;
+      font-family: inherit; padding: 6px 12px; cursor: pointer;
+      flex-shrink: 0;
+    }
+    .tool-btn:active { opacity: 0.7; }
+    .tool-btn.blue   { color: var(--blue);   border-color: #3b82f633; background: #3b82f60d; }
+    .tool-btn.green  { color: var(--green);  border-color: #22c55e33; background: #22c55e0d; }
+    .tool-btn.red    { color: var(--red);    border-color: #ef444433; background: #ef44440d; }
+    .tool-btn.amber  { color: var(--amber);  border-color: #f59e0b33; background: #f59e0b0d; }
+
+    .result-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px;
+      font-size: 11px; line-height: 1.6; color: var(--muted);
+      min-height: 48px; white-space: pre-wrap; word-break: break-all;
+    }
+    .result-box.ok  { color: var(--green); border-color: #22c55e33; }
+    .result-box.err { color: var(--red);   border-color: #ef444433; }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <a href="/" class="back-btn">‹</a>
+  <div class="page-title-block">
+    <div class="page-icon">⚙️ Developer Tools</div>
+    <div class="page-title">Araçlar</div>
+  </div>
+  <div class="pill" id="clock">—</div>
+</div>
+
+<!-- Ping -->
+<div class="section">
+  <div class="section-label">Ping</div>
+  <div class="tool-list">
+    <div class="tool-item">
+      <div class="tool-left">
+        <div class="tool-name">Sanayi API</div>
+        <div class="tool-desc">sanayi-uygulamasi.vercel.app</div>
+      </div>
+      <button class="tool-btn blue" onclick="doPing('sanayi')">Ping</button>
+    </div>
+    <div class="tool-item">
+      <div class="tool-left">
+        <div class="tool-name">Zanzibar Derneği</div>
+        <div class="tool-desc">zanzibarbarisdernegi.org.tr</div>
+      </div>
+      <button class="tool-btn blue" onclick="doPing('zanzibar')">Ping</button>
+    </div>
+    <div class="tool-item">
+      <div class="tool-left">
+        <div class="tool-name">Local Server</div>
+        <div class="tool-desc">localhost:8787</div>
+      </div>
+      <button class="tool-btn green" onclick="doPing('local')">Ping</button>
+    </div>
+  </div>
+  <div class="result-box" id="pingResult" style="margin-top:8px">Ping için bir servis seç...</div>
+</div>
+
+<!-- Server -->
+<div class="section" style="margin-top:8px">
+  <div class="section-label">Server</div>
+  <div class="tool-list">
+    <div class="tool-item">
+      <div class="tool-left">
+        <div class="tool-name">Restart Server</div>
+        <div class="tool-desc">Local server'ı yeniden başlat</div>
+      </div>
+      <button class="tool-btn red" onclick="doRestart()">Restart</button>
+    </div>
+    <div class="tool-item">
+      <div class="tool-left">
+        <div class="tool-name">Clear Logs</div>
+        <div class="tool-desc">Local log geçmişini temizle</div>
+      </div>
+      <button class="tool-btn amber" onclick="doClearLogs()">Temizle</button>
+    </div>
+  </div>
+</div>
+
+<!-- Logs -->
+<div class="section" style="margin-top:8px">
+  <div class="section-label">Local Loglar</div>
+  <div class="log-strip" id="logStrip">
+    <div class="log-item"><span class="log-time">—</span><span class="log-msg">Yükleniyor...</span></div>
+  </div>
+  <div class="btn-row" style="margin-top:8px">
+    <button class="btn" onclick="loadLogs()">↻ Logları Yenile</button>
+  </div>
+</div>
+
+<!-- Info -->
+<div class="section" style="margin-top:8px">
+  <div class="section-label">Ortam</div>
+  <div class="info-grid">
+    <div class="info-cell">
+      <div class="info-key">Versiyon</div>
+      <div class="info-val" id="infoVersion">—</div>
+    </div>
+    <div class="info-cell">
+      <div class="info-key">Uptime</div>
+      <div class="info-val" id="infoUptime">—</div>
+    </div>
+    <div class="info-cell">
+      <div class="info-key">Node</div>
+      <div class="info-val" id="infoNode" style="font-size:11px;padding-top:2px">—</div>
+    </div>
+    <div class="info-cell">
+      <div class="info-key">Port</div>
+      <div class="info-val">8787</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function tickClock() { document.getElementById('clock').textContent = new Date().toLocaleTimeString('tr-TR'); }
+  setInterval(tickClock, 1000); tickClock();
+
+  function formatUptime(s) {
+    if (s < 60) return s + 's';
+    if (s < 3600) return Math.floor(s / 60) + 'm ' + (s % 60) + 's';
+    return Math.floor(s / 3600) + 'h ' + Math.floor((s % 3600) / 60) + 'm';
+  }
+
+  async function loadHealth() {
+    try {
+      const d = await fetch('/api/health').then(r => r.json());
+      document.getElementById('infoVersion').textContent = 'v' + d.version;
+      document.getElementById('infoUptime').textContent  = formatUptime(d.uptime);
+      document.getElementById('infoNode').textContent    = d.node || '—';
+    } catch {}
+  }
+
+  async function doPing(id) {
+    const box = document.getElementById('pingResult');
+    box.className = 'result-box';
+    box.textContent = 'Ping gönderiliyor...';
+    try {
+      const res  = await fetch(`/api/projects/${id}/status`);
+      const data = await res.json();
+      if (data.online) {
+        box.className = 'result-box ok';
+        box.textContent = `✓ ${data.name || id}\n  HTTP ${data.status} — ${data.ms}ms\n  ${data.url || 'localhost:8787'}`;
+      } else {
+        box.className = 'result-box err';
+        box.textContent = `✗ ${data.name || id}\n  ${data.errorType || data.error || 'offline'}\n  ${data.ms}ms`;
+      }
+    } catch (err) {
+      box.className = 'result-box err';
+      box.textContent = '✗ ' + err.message;
+    }
+  }
+
+  async function doRestart() {
+    if (!confirm('Server yeniden başlatılsın mı?')) return;
+    try {
+      await fetch('/api/tools/restart', { method: 'POST' });
+    } catch {}
+    const box = document.getElementById('pingResult');
+    box.className = 'result-box ok';
+    box.textContent = 'Restart sinyali gönderildi.\nTermux\'ta npm start ile tekrar başlatman gerekebilir.';
+  }
+
+  async function doClearLogs() {
+    if (!confirm('Loglar temizlensin mi?')) return;
+    try {
+      await fetch('/api/tools/logs', { method: 'DELETE' });
+      loadLogs();
+    } catch {}
+  }
+
+  async function loadLogs() {
+    try {
+      const logs = await fetch('/api/tools/logs').then(r => r.json());
+      const strip = document.getElementById('logStrip');
+      if (!logs.length) {
+        strip.innerHTML = '<div class="log-item"><span class="log-msg" style="color:var(--muted)">Log yok</span></div>';
+        return;
+      }
+      strip.innerHTML = logs.slice(0, 30).map(l =>
+        `<div class="log-item">
+          <span class="log-time">${l.time}</span>
+          <span class="log-msg ${l.type || ''}">${l.msg}</span>
+        </div>`
+      ).join('');
+    } catch {
+      document.getElementById('logStrip').innerHTML =
+        '<div class="log-item"><span class="log-msg err">Log yüklenemedi</span></div>';
+    }
+  }
+
+  loadHealth();
+  loadLogs();
+</script>
+</body>
+</html>
