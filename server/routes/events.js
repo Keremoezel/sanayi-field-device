@@ -1,5 +1,5 @@
-const router   = require('express').Router();
-const projects = require('../data/projects.json');
+const router = require('express').Router();
+const store  = require('../services/projectStore');
 
 const KEY = process.env.FIELD_DEVICE_KEY || '';
 
@@ -23,14 +23,16 @@ async function fetchProjectLogs(project) {
 }
 
 // Tüm projelerin loglarını çek
-router.get('/', async (req, res) => {
-  const results = await Promise.all(projects.map(fetchProjectLogs));
+router.get('/', async (_req, res) => {
+  const projects = store.read();
+  const results  = await Promise.all(projects.map(fetchProjectLogs));
   res.json(results);
 });
 
 // Tek proje logu
 router.get('/:id', async (req, res) => {
-  const project = projects.find(p => p.id === req.params.id);
+  const projects = store.read();
+  const project  = projects.find(p => p.id === req.params.id);
   if (!project) return res.status(404).json({ error: 'Not found' });
   const result = await fetchProjectLogs(project);
   res.json(result);

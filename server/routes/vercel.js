@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const store  = require('../services/projectStore');
 
 const BASE = 'https://api.vercel.com';
 
@@ -19,7 +20,7 @@ async function vercelFetch(path) {
 }
 
 // Tüm projeleri + son deployment'larını çek
-router.get('/projects', async (req, res) => {
+router.get('/projects', async (_req, res) => {
   if (!process.env.VERCEL_TOKEN) {
     return res.status(400).json({ error: 'VERCEL_TOKEN eksik' });
   }
@@ -35,10 +36,10 @@ router.get('/projects', async (req, res) => {
           );
           const d = deployments?.[0];
           return {
-            id:            p.id,
-            name:          p.name,
-            framework:     p.framework ?? null,
-            url:           p.alias?.[0] ? `https://${p.alias[0]}` : null,
+            id:        p.id,
+            name:      p.name,
+            framework: p.framework ?? null,
+            url:       p.alias?.[0] ? `https://${p.alias[0]}` : null,
             lastDeploy: d ? {
               state:         d.state,
               createdAt:     d.createdAt,
@@ -60,7 +61,7 @@ router.get('/projects', async (req, res) => {
   }
 });
 
-// Tek proje son deployment
+// Tek proje son deployment'ları
 router.get('/projects/:name/deploy', async (req, res) => {
   if (!process.env.VERCEL_TOKEN) {
     return res.status(400).json({ error: 'VERCEL_TOKEN eksik' });
@@ -87,6 +88,26 @@ router.get('/projects/:name/deploy', async (req, res) => {
         url:           d.url ? `https://${d.url}` : null,
       })),
     });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Deploy hook ile yeniden deploy tetikle
+router.post('/redeploy/:id', async (req, res) => {
+  const projects = store.read();
+  const project  = projects.find(p => p.id === req.params.id);
+
+  if (!project) return res.status(404).json({ error: 'Proje bulunamadı' });
+  if (!project.deployHook) return res.status(400).json({ error: 'Bu proje için deployHook URL tanımlı değil. Projeyi düzenleyip Deploy Hook URL ekleyin.' });
+
+  try {
+    const hookRes = await fetch(project.deployHook, {
+      method: 'POST',
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!hookRes.ok) throw new Error(`Hook HTTP ${hookRes.status}`);
+    res.json({ ok: true, note: `${project.name} deploy tetiklendi!` });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

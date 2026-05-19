@@ -1,14 +1,24 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { openModal } from '../stores/modal.js';
 
   export let badge = 0;
 
-  let allLogs  = { remote: [], local: [] };
+  let allLogs    = { remote: [], local: [] };
   let srcFilter  = 'all';
   let typeFilter = 'all';
+  let searchQuery = '';
+  let sseConnected = false;
+  let es = null;
 
-  onMount(load);
+  onMount(() => {
+    load();
+    connectSSE();
+  });
+
+  onDestroy(() => {
+    if (es) es.close();
+  });
 
   async function load() {
     try {
@@ -33,15 +43,33 @@
       }
 
       allLogs.remote = normRemote;
-      allLogs.local  = localData.map(l => ({
-        _source: 'local', _project: 'Field Device',
-        id: l.ts + Math.random(), ts: l.ts,
-        type: l.type === 'err' ? 'error' : l.type === 'ok' ? 'info' : l.type,
-        msg: l.msg, meta: l.time, raw: l,
-      }));
-
+      allLogs.local  = localData.map(l => normalizeLocal(l));
+      allLogs = { ...allLogs };
       badge = 0;
     } catch {}
+  }
+
+  function normalizeLocal(l) {
+    return {
+      _source: 'local', _project: 'Field Device',
+      id: l.ts + Math.random(), ts: l.ts,
+      type: l.type === 'err' ? 'error' : l.type === 'ok' ? 'info' : l.type,
+      msg: l.msg, meta: l.time, raw: l,
+    };
+  }
+
+  function connectSSE() {
+    if (es) { es.close(); es = null; }
+    es = new EventSource('/api/tools/logs/stream');
+    es.addEventListener('log', (e) => {
+      try {
+        const norm = normalizeLocal(JSON.parse(e.data));
+        allLogs = { ...allLogs, local: [norm, ...allLogs.local].slice(0, 150) };
+        sseConnected = true;
+      } catch {}
+    });
+    es.onopen  = () => { sseConnected = true; };
+    es.onerror = () => { sseConnected = false; };
   }
 
   $: combined = (() => {
@@ -50,6 +78,16 @@
     if (srcFilter === 'all' || srcFilter === 'device') list = list.concat(allLogs.local);
     if (typeFilter !== 'all') list = list.filter(l => l.type === typeFilter);
     return list.sort((a, b) => b.ts - a.ts);
+  })();
+
+  $: filtered = (() => {
+    if (!searchQuery.trim()) return combined;
+    const q = searchQuery.toLowerCase();
+    return combined.filter(l =>
+      l.msg.toLowerCase().includes(q) ||
+      l._project.toLowerCase().includes(q) ||
+      (l.meta && l.meta.toLowerCase().includes(q))
+    );
   })();
 
   function rowClass(type) {
@@ -69,7 +107,18 @@
   }
 
   function fmtTs(ts) {
-    return new Date(ts).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+    return new Date(ts).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+
+  async function copyLog(e, l) {
+    e.stopPropagation();
+    const text = `[${fmtTs(l.ts)}] [${l.type.toUpperCase()}] ${l.msg}${l.meta ? ' — ' + l.meta : ''}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      const btn = e.currentTarget;
+      btn.textContent = '✓';
+      setTimeout(() => { btn.textContent = '⎘'; }, 800);
+    } catch {}
   }
 
   function showLogModal(l) {
@@ -89,8 +138,14 @@
 
 <div class="ftabs">
   <button class="ftab" class:active={srcFilter === 'all'}    on:click={() => srcFilter = 'all'}>Tümü</button>
-  <button class="ftab" class:active={srcFilter === 'device'} on:click={() => srcFilter = 'device'}>Device Local</button>
+  <button class="ftab" class:active={srcFilter === 'device'} on:click={() => srcFilter = 'device'}>Device</button>
+  <button class="ftab" class:active={srcFilter === 'remote'} on:click={() => srcFilter = 'remote'}>Remote</button>
+  <span style="margin-left:auto;display:flex;align-items:center;font-size:10px;color:var(--c-t3)">
+    <span class="sse-dot" class:live={sseConnected}></span>
+    {sseConnected ? 'Live' : 'Polling'}
+  </span>
 </div>
+
 <div class="ftabs">
   <button class="ftab" class:active={typeFilter === 'all'}   on:click={() => typeFilter = 'all'}>Tümü</button>
   <button class="ftab" class:active={typeFilter === 'auth'}  on:click={() => typeFilter = 'auth'}>Auth</button>
@@ -99,13 +154,25 @@
   <button class="ftab" class:active={typeFilter === 'info'}  on:click={() => typeFilter = 'info'}>Info</button>
 </div>
 
+<div class="search-wrap">
+  <span class="search-icon">🔍</span>
+  <input
+    class="search-input"
+    bind:value={searchQuery}
+    placeholder="Loglarda ara..."
+    type="search"
+  />
+</div>
+
 <div class="group" style="margin-bottom:12px">
-  {#if combined.length === 0}
+  {#if filtered.length === 0}
     <div class="log-row">
-      <div class="log-body"><div class="log-msg" style="color:var(--c-t3)">Bu filtrede log bulunamadı.</div></div>
+      <div class="log-body"><div class="log-msg" style="color:var(--c-t3)">
+        {searchQuery ? 'Arama sonucu bulunamadı.' : 'Bu filtrede log yok.'}
+      </div></div>
     </div>
   {:else}
-    {#each combined as l (l.id)}
+    {#each filtered as l (l.id)}
       <div
         class="log-row {rowClass(l.type)}"
         on:click={() => showLogModal(l)}
@@ -117,6 +184,7 @@
           <div class="log-meta">{l._project}{l.meta ? ' · ' + l.meta : ''}</div>
         </div>
         <span class="tag">{l.type}</span>
+        <button class="log-copy" on:click={(e) => copyLog(e, l)} title="Kopyala">⎘</button>
       </div>
     {/each}
   {/if}
