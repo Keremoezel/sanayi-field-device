@@ -7,32 +7,97 @@
   let qrDataUrl = '';
   let qrUrl     = '';
   let netInfo   = {};
+  let gitInfo   = {};
+  let sysInfo   = {};
+
+  // Command runner
+  let cmdOutput  = '';
+  let cmdError   = false;
+  let cmdRunning = false;
+  let lastCmd    = '';
+
+  const COMMANDS = [
+    { id: 'git-status',  label: 'git status',   icon: '📋' },
+    { id: 'git-pull',    label: 'git pull',      icon: '⬇️' },
+    { id: 'git-log',     label: 'git log',       icon: '📜' },
+    { id: 'git-branch',  label: 'branches',      icon: '🌿' },
+    { id: 'git-diff',    label: 'diff --stat',   icon: '±' },
+    { id: 'npm-list',    label: 'npm list',      icon: '📦' },
+    { id: 'node-v',      label: 'node -v',       icon: '🟩' },
+    { id: 'disk',        label: 'disk usage',    icon: '💾' },
+    { id: 'ps-node',     label: 'node procs',    icon: '⚙️' },
+    { id: 'env-check',   label: 'env keys',      icon: '🔑' },
+    { id: 'git-stash',   label: 'stash list',    icon: '📌' },
+    { id: 'git-diff',    label: 'git diff',      icon: '🔍' },
+  ];
 
   onMount(load);
 
   async function load() {
+    await Promise.all([loadStatus(), loadQR(), loadNet(), loadGit(), loadSystem()]);
+  }
+
+  async function loadStatus() {
     try {
       const data = await fetch('/api/tools/status').then(r => r.json());
       info = {
         version: 'v' + data.version,
         uptime:  fmtTime(data.uptime),
         node:    data.node,
-        memory:  data.memory + ' MB',
+        memory:  data.memory + ' MB (RSS)',
         repo:    data.repo    || 'Bilinmiyor',
         commit:  data.commit  ? `${data.commit} (${timeAgo(new Date(data.commitAge))})` : '—',
         env:     data.env,
       };
     } catch {}
+  }
 
+  async function loadQR() {
     try {
       const qr = await fetch('/api/tools/qr').then(r => r.json());
       qrDataUrl = qr.dataUrl || '';
       qrUrl     = qr.url     || '';
     } catch {}
+  }
 
+  async function loadNet() {
     try {
       const net = await fetch('/api/tools/network').then(r => r.json());
       netInfo = net;
+    } catch {}
+  }
+
+  async function loadGit() {
+    try {
+      gitInfo = await fetch('/api/tools/git').then(r => r.json());
+    } catch {}
+  }
+
+  async function loadSystem() {
+    try {
+      sysInfo = await fetch('/api/tools/system').then(r => r.json());
+    } catch {}
+  }
+
+  async function runCmd(id) {
+    cmdRunning = true;
+    cmdOutput  = '';
+    cmdError   = false;
+    lastCmd    = id;
+    try {
+      const res  = await fetch(`/api/tools/cmd/${id}`).then(r => r.json());
+      cmdOutput  = res.output || '(çıktı yok)';
+      cmdError   = res.error  || false;
+    } catch (e) {
+      cmdOutput = 'Hata: ' + e.message;
+      cmdError  = true;
+    }
+    cmdRunning = false;
+  }
+
+  async function copyOutput() {
+    try {
+      await navigator.clipboard.writeText(cmdOutput);
     } catch {}
   }
 
@@ -46,13 +111,14 @@
   }
 
   async function pingAll() {
-    pingState = { visible: true, ok: null, text: 'Tüm node\'lar ping ediliyor...' };
+    pingState = { visible: true, ok: null, text: 'Ping ediliyor...' };
     try {
-      const ids = ['sanayi', 'zanzibar', 'local'];
-      const results = await Promise.all(ids.map(id => fetch(`/api/tools/ping/${id}`).then(r => r.json()).catch(() => ({ online: false, name: id, ms: 0 }))));
+      const ids     = ['sanayi', 'zanzibar', 'local'];
+      const results = await Promise.all(ids.map(id =>
+        fetch(`/api/tools/ping/${id}`).then(r => r.json()).catch(() => ({ online: false, name: id, ms: 0 }))
+      ));
       const lines = results.map(d => d.online ? `✓ ${d.name} · ${d.ms}ms` : `✗ ${d.name || '?'} · offline`);
-      const allOk = results.every(d => d.online);
-      pingState = { visible: true, ok: allOk, text: lines.join('\n') };
+      pingState   = { visible: true, ok: results.every(d => d.online), text: lines.join('\n') };
     } catch { pingState = { visible: true, ok: false, text: '✗ Bağlantı hatası' }; }
   }
 
@@ -81,9 +147,12 @@
     navigator.clipboard.writeText(url).then(() => alert('Kopyalandı: ' + url)).catch(() => alert(url));
   }
 
-  $: lanIfaces = (netInfo.interfaces || []).filter(i => !i.internal);
+  $: lanIfaces     = (netInfo.interfaces || []).filter(i => !i.internal);
+  $: memPct        = sysInfo.memory?.percent || 0;
+  $: gitStatusIcon = (gitInfo.modified > 0) ? '⚠' : '✓';
 </script>
 
+<!-- Address + QR -->
 <div class="group" style="margin-bottom:16px">
   <div class="row">
     <div class="row-body">
@@ -92,20 +161,122 @@
     </div>
     <button class="copy-btn" on:click={copyURL}>📋 Kopyala</button>
   </div>
+  {#if qrDataUrl}
+    <div class="qr-wrap">
+      <img class="qr-img" src={qrDataUrl} alt="QR" />
+      <div class="qr-url">{qrUrl}</div>
+    </div>
+  {/if}
 </div>
 
-<!-- QR Code -->
-{#if qrDataUrl}
-  <div class="sec">QR Kod</div>
+<!-- Git Panel -->
+<div class="sec">Git Durumu</div>
+<div class="group" style="margin-bottom:16px">
+  <div class="row">
+    <div class="row-body">
+      <div class="row-title">Branch</div>
+    </div>
+    <div class="row-right">
+      <span class="tag blue" style="font-size:13px;padding:3px 12px">{gitInfo.branch || '—'}</span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="row-body"><div class="row-title">Değişiklik</div></div>
+    <div class="row-right" style="font-family:var(--mono);font-size:13px;color:{gitInfo.modified > 0 ? 'var(--c-yellow)' : 'var(--c-green)'}">
+      {gitStatusIcon} {gitInfo.modified ?? '—'} dosya
+    </div>
+  </div>
+  {#if gitInfo.ahead > 0 || gitInfo.behind > 0}
+    <div class="row">
+      <div class="row-body"><div class="row-title">Remote</div></div>
+      <div class="row-right" style="display:flex;gap:8px">
+        {#if gitInfo.ahead  > 0}<span class="tag green">↑ {gitInfo.ahead} ahead</span>{/if}
+        {#if gitInfo.behind > 0}<span class="tag orange">↓ {gitInfo.behind} behind</span>{/if}
+      </div>
+    </div>
+  {/if}
+  {#if gitInfo.files?.length > 0}
+    <div class="row" style="flex-direction:column;align-items:flex-start;gap:4px">
+      <div class="row-title" style="margin-bottom:4px">Değişen Dosyalar</div>
+      {#each gitInfo.files as f}
+        <div class="git-file">{f}</div>
+      {/each}
+    </div>
+  {/if}
+  {#if gitInfo.log?.length > 0}
+    <div class="row" style="flex-direction:column;align-items:flex-start;gap:4px">
+      <div class="row-title" style="margin-bottom:4px">Son Commitler</div>
+      {#each gitInfo.log as line}
+        <div class="git-commit">{line}</div>
+      {/each}
+    </div>
+  {/if}
+</div>
+
+<!-- Command Runner -->
+<div class="sec">Komut Çalıştır</div>
+<div class="cmd-grid">
+  {#each COMMANDS.slice(0, 10) as c}
+    <button
+      class="cmd-btn"
+      class:running={cmdRunning && lastCmd === c.id}
+      class:active={!cmdRunning && lastCmd === c.id}
+      on:click={() => runCmd(c.id)}
+      disabled={cmdRunning}
+    >
+      <span class="cmd-icon">{c.icon}</span>
+      <span class="cmd-label">{c.label}</span>
+    </button>
+  {/each}
+</div>
+
+{#if cmdOutput || cmdRunning}
+  <div class="term-wrap">
+    <div class="term-header">
+      <span class="term-title">{lastCmd || '—'}</span>
+      {#if cmdRunning}
+        <span class="term-status">running...</span>
+      {:else}
+        <button class="term-copy" on:click={copyOutput}>⎘ kopyala</button>
+      {/if}
+    </div>
+    <pre class="term-out" class:term-err={cmdError}>{cmdRunning ? '⠋ çalışıyor...' : cmdOutput}</pre>
+  </div>
+{/if}
+
+<!-- System Stats -->
+{#if sysInfo.memory}
+  <div class="sec">Sistem Kaynakları</div>
   <div class="group" style="margin-bottom:16px">
-    <div class="qr-wrap">
-      <img class="qr-img" src={qrDataUrl} alt="QR Kod" />
-      <div class="qr-url">{qrUrl}</div>
+    <div class="row" style="flex-direction:column;align-items:stretch;gap:6px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="row-title">Bellek</div>
+        <span style="font-family:var(--mono);font-size:12px;color:var(--c-t2)">
+          {sysInfo.memory.used} / {sysInfo.memory.total} MB · %{sysInfo.memory.percent}
+        </span>
+      </div>
+      <div class="mem-bar-bg">
+        <div class="mem-bar" style="width:{memPct}%;background:{memPct > 85 ? 'var(--grad-orange)' : memPct > 60 ? 'var(--grad-blue)' : 'var(--grad-green)'}"></div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="row-body"><div class="row-title">CPU Yük (1/5/15dk)</div></div>
+      <div class="row-right" style="font-family:var(--mono);font-size:12px;color:var(--c-t2)">
+        {sysInfo.cpu?.load1} / {sysInfo.cpu?.load5} / {sysInfo.cpu?.load15}
+      </div>
+    </div>
+    <div class="row">
+      <div class="row-body"><div class="row-title">CPU Çekirdek</div></div>
+      <div class="row-right" style="font-family:var(--mono);font-size:12px;color:var(--c-t2)">{sysInfo.cpu?.cores} × {sysInfo.cpu?.model}</div>
+    </div>
+    <div class="row">
+      <div class="row-body"><div class="row-title">OS Uptime</div></div>
+      <div class="row-right" style="font-family:var(--mono);font-size:12px;color:var(--c-t2)">{fmtTime(sysInfo.osUptime || 0)}</div>
     </div>
   </div>
 {/if}
 
-<!-- Network Info -->
+<!-- Network -->
 {#if lanIfaces.length > 0}
   <div class="sec">Ağ Bilgisi</div>
   <div class="group" style="margin-bottom:16px">
@@ -115,20 +286,14 @@
     </div>
     {#each lanIfaces as iface}
       <div class="row">
-        <div class="row-body">
-          <div class="row-title">{iface.name}</div>
-          <div class="row-sub">{netInfo.platform} · {netInfo.arch}</div>
-        </div>
+        <div class="row-body"><div class="row-title">{iface.name}</div></div>
         <div class="row-right net-addr">{iface.address}</div>
       </div>
     {/each}
-    <div class="row">
-      <div class="row-body"><div class="row-title">Port</div></div>
-      <div class="row-right" style="font-family:var(--mono);color:var(--c-blue)">{netInfo.port || 8787}</div>
-    </div>
   </div>
 {/if}
 
+<!-- Ping -->
 <div class="sec">Hızlı Kontrol</div>
 <div class="action-grid">
   <button class="action-btn" on:click={() => pingNode('sanayi')}>
@@ -159,6 +324,7 @@
   </div>
 {/if}
 
+<!-- Server Info -->
 <div class="sec">Server Bilgisi</div>
 <div class="group">
   <div class="row">
@@ -167,7 +333,7 @@
   </div>
   <div class="row">
     <div class="row-body"><div class="row-title">Uptime</div></div>
-    <div class="row-right" style="font-family:var(--mono);font-size:13px;color:var(--c-t1)">{info.uptime || '—'}</div>
+    <div class="row-right" style="font-family:var(--mono);font-size:13px">{info.uptime || '—'}</div>
   </div>
   <div class="row">
     <div class="row-body"><div class="row-title">Node.js</div></div>
@@ -190,6 +356,7 @@
   </div>
 </div>
 
+<!-- Management -->
 <div class="sec">Yönetim</div>
 <div class="group">
   <div class="row tap" on:click={triggerUpdate} role="button" tabindex="0">

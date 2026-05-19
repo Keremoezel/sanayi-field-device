@@ -157,6 +157,85 @@ router.post('/update', async (req, res) => {
   }
 });
 
+// ─── GET /api/tools/git ──────────────────────────────────────
+router.get('/git', async (_req, res) => {
+  const [branch, statusOut, logOut] = await Promise.all([
+    run('git rev-parse --abbrev-ref HEAD'),
+    run('git status --short'),
+    run('git log --oneline -8'),
+  ]);
+
+  const upstream = await run('git rev-parse --abbrev-ref @{upstream}').catch(() => null);
+  let ahead = 0, behind = 0;
+  if (upstream) {
+    const ab = await run(`git rev-list --left-right --count HEAD...${upstream}`);
+    if (ab) { const p = ab.split(/\s+/); ahead = +p[0] || 0; behind = +p[1] || 0; }
+  }
+
+  const files = (statusOut || '').split('\n').filter(Boolean);
+  res.json({
+    branch:   branch  || 'unknown',
+    ahead, behind,
+    modified: files.length,
+    files:    files.slice(0, 12),
+    log:      (logOut || '').split('\n').filter(Boolean),
+  });
+});
+
+// ─── GET /api/tools/system ───────────────────────────────────
+router.get('/system', (_req, res) => {
+  const total = os.totalmem();
+  const free  = os.freemem();
+  const used  = total - free;
+  const load  = os.loadavg();
+  const cpus  = os.cpus();
+  res.json({
+    memory: {
+      total:   Math.round(total / 1024 / 1024),
+      free:    Math.round(free  / 1024 / 1024),
+      used:    Math.round(used  / 1024 / 1024),
+      percent: Math.round((used / total) * 100),
+    },
+    cpu: {
+      cores: cpus.length,
+      model: cpus[0]?.model?.replace(/\s+/g, ' ').trim() || '—',
+      load1:  load[0].toFixed(2),
+      load5:  load[1].toFixed(2),
+      load15: load[2].toFixed(2),
+    },
+    osUptime: Math.floor(os.uptime()),
+    platform: os.platform(),
+    arch:     os.arch(),
+  });
+});
+
+// ─── GET /api/tools/cmd/:name ────────────────────────────────
+const SAFE_CMDS = {
+  'git-pull':    'git pull',
+  'git-status':  'git status',
+  'git-log':     'git log --oneline -12',
+  'git-diff':    'git diff --stat',
+  'npm-list':    'npm list --depth=0',
+  'node-v':      'node --version',
+  'npm-v':       'npm --version',
+  'disk':        os.platform() === 'win32' ? 'wmic logicaldisk get caption,freespace,size' : 'df -h .',
+  'ps-node':     os.platform() === 'win32' ? 'tasklist /FI "IMAGENAME eq node.exe"' : 'ps aux | grep -E "node|npm" | grep -v grep',
+  'git-branch':  'git branch -a',
+  'git-stash':   'git stash list',
+  'env-check':   'node -e "console.log(Object.keys(process.env).filter(k=>k.startsWith(\'SANAYI\')||k.startsWith(\'VERCEL\')||k.startsWith(\'GITHUB\')||k==='+"'PORT'"+"||k==='HOST').join('\\n'))",
+};
+
+router.get('/cmd/:name', async (req, res) => {
+  const name = req.params.name;
+  const cmd  = SAFE_CMDS[name];
+  if (!cmd) return res.status(400).json({ error: 'Bilinmeyen komut: ' + name });
+
+  exec(cmd, { cwd: ROOT, timeout: 20000 }, (err, stdout, stderr) => {
+    const output = (stdout || '') + (err && !stdout ? (stderr || err.message) : '');
+    res.json({ name, output: output.trim(), error: !!err && !stdout });
+  });
+});
+
 // ─── GET /api/tools/ping/:id ─────────────────────────────────
 const { ping } = require('../services/checker');
 

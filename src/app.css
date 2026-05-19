@@ -793,6 +793,79 @@ html[data-theme="light"] .crud-input { background: rgba(255,255,255,.7); }
 /* ─── NETWORK INFO ───────────────────────────── */
 .net-addr { font-family: var(--mono); font-size: 13px; color: var(--c-blue); }
 
+/* ─── SEC ROW (sec + controls inline) ───────── */
+.sec-row {
+  display: flex; align-items: center; gap: 10px;
+  margin: 22px 0 10px 2px;
+}
+.sec-row .sec { margin: 0; flex: 1; }
+
+/* ─── GIT PANEL ──────────────────────────────── */
+.git-file {
+  font-family: var(--mono); font-size: 11px;
+  color: var(--c-yellow); padding: 2px 0;
+  word-break: break-all;
+}
+.git-commit {
+  font-family: var(--mono); font-size: 11px;
+  color: var(--c-t2); padding: 2px 0;
+  word-break: break-all;
+}
+.git-commit:first-child { color: var(--c-blue); }
+
+/* ─── COMMAND RUNNER ─────────────────────────── */
+.cmd-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+  margin-bottom: 10px;
+}
+.cmd-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: var(--glass-card); border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm); padding: 10px 6px;
+  cursor: pointer; font-family: var(--font); transition: all .12s;
+}
+.cmd-btn:disabled { opacity: .4; cursor: not-allowed; }
+.cmd-btn.running  { border-color: var(--c-blue); background: rgba(99,102,241,.08); }
+.cmd-btn.active   { border-color: var(--c-blue); }
+.cmd-btn:not(:disabled):active { transform: scale(.96); background: rgba(99,102,241,.1); }
+.cmd-icon  { font-size: 18px; line-height: 1; }
+.cmd-label { font-size: 10px; color: var(--c-t2); font-family: var(--mono); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+
+.term-wrap {
+  background: rgba(0,0,0,.35); border: 1px solid var(--c-border2);
+  border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 16px;
+}
+html[data-theme="light"] .term-wrap { background: rgba(15,23,42,.9); }
+.term-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 12px; border-bottom: 1px solid var(--c-border);
+  background: rgba(0,0,0,.2);
+}
+.term-title  { font-family: var(--mono); font-size: 11px; color: var(--c-t3); }
+.term-status { font-family: var(--mono); font-size: 10px; color: var(--c-blue); }
+.term-copy {
+  background: none; border: 1px solid var(--c-border); border-radius: 5px;
+  padding: 2px 8px; font-size: 10px; color: var(--c-t3); cursor: pointer;
+  font-family: var(--mono); transition: all .1s;
+}
+.term-copy:hover { color: var(--c-blue); border-color: var(--c-blue); }
+.term-out {
+  padding: 12px; font-family: var(--mono); font-size: 11px; color: #9ab;
+  white-space: pre-wrap; word-break: break-all;
+  max-height: 260px; overflow-y: auto; line-height: 1.6;
+}
+html[data-theme="light"] .term-out { color: #c8d8e8; }
+.term-out.term-err { color: var(--c-red); }
+
+/* ─── MEMORY BAR ─────────────────────────────── */
+.mem-bar-bg {
+  height: 6px; background: var(--c-s3); border-radius: 3px; overflow: hidden; width: 100%;
+}
+.mem-bar {
+  height: 100%; border-radius: 3px;
+  transition: width .4s ease; background: var(--grad-green);
+}
+
 /* ─── DEPLOY BTN ─────────────────────────────── */
 .deploy-trigger {
   background: none; border: 1px solid var(--c-border);

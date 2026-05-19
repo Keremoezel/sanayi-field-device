@@ -49,11 +49,12 @@
   }
 
   function sparkPath(values) {
-    if (!values || values.length < 2) return '';
-    const w = 60, h = 22, max = Math.max(...values, 1);
+    if (!values || values.length === 0) return '';
+    if (values.length === 1) return `M2,11L58,11`;
+    const w = 56, h = 22, max = Math.max(...values, 1);
     const pts = values.map((v, i) => {
-      const x = (i / (values.length - 1)) * w;
-      const y = h - (v / max) * (h - 3) - 1;
+      const x = 2 + (i / (values.length - 1)) * w;
+      const y = h - (v / max) * (h - 4) - 1;
       return `${x.toFixed(1)},${y.toFixed(1)}`;
     });
     return `M${pts.join('L')}`;
@@ -285,16 +286,14 @@
   </div>
 {/if}
 
-<div class="sec">
-  Sanayi Servisleri
-  <span style="margin-left:auto;display:flex;gap:0">
+<div class="sec-row">
+  <div class="sec" style="margin:0;flex:1">Sanayi Servisleri</div>
+  <div class="refresh-sel">
     <span class="refresh-lbl">Yenile:</span>
-    <div class="refresh-sel">
-      {#each INTERVALS as s}
-        <button class="refresh-btn" class:active={refreshInterval === s} on:click={() => setRefresh(s)}>{s}s</button>
-      {/each}
-    </div>
-  </span>
+    {#each INTERVALS as s}
+      <button class="refresh-btn" class:active={refreshInterval === s} on:click={() => setRefresh(s)}>{s}s</button>
+    {/each}
+  </div>
 </div>
 
 <div class="svc-grid">
@@ -305,7 +304,7 @@
       <div class="svc-name">{s.name}</div>
       <div class="svc-val {ok}">{ok === 'ok' ? 'Online' : ok === 'down' ? 'Offline' : '—'}</div>
       <div class="svc-ms">{s.ms ? s.ms + 'ms' : (s.note || '')}</div>
-      {#if sparkData[key]?.length >= 2}
+      {#if sparkData[key]?.length >= 1}
         <svg class="svc-spark" width="60" height="22" viewBox="0 0 60 22">
           <path class="spark-line {ok}" d={sparkPath(sparkData[key])} />
         </svg>
