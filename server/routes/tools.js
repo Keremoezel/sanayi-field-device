@@ -211,23 +211,47 @@ router.get('/system', (_req, res) => {
 
 // ─── GET /api/tools/cmd/:name ────────────────────────────────
 const SAFE_CMDS = {
-  'git-pull':    'git pull',
-  'git-status':  'git status',
-  'git-log':     'git log --oneline -12',
-  'git-diff':    'git diff --stat',
-  'npm-list':    'npm list --depth=0',
-  'node-v':      'node --version',
-  'npm-v':       'npm --version',
-  'disk':        os.platform() === 'win32' ? 'wmic logicaldisk get caption,freespace,size' : 'df -h .',
-  'ps-node':     os.platform() === 'win32' ? 'tasklist /FI "IMAGENAME eq node.exe"' : 'ps aux | grep -E "node|npm" | grep -v grep',
-  'git-branch':  'git branch -a',
-  'git-stash':   'git stash list',
-  'env-check':   'node -e "console.log(Object.keys(process.env).filter(k=>k.startsWith(\'SANAYI\')||k.startsWith(\'VERCEL\')||k.startsWith(\'GITHUB\')||k==='+"'PORT'"+"||k==='HOST').join('\\n'))",
+  'git-pull':   'git pull',
+  'git-status': 'git status',
+  'git-log':    'git log --oneline -12',
+  'git-diff':   'git diff --stat',
+  'npm-list':   'npm list --depth=0',
+  'node-v':     'node --version',
+  'npm-v':      'npm --version',
+  'git-branch': 'git branch -a',
+  'git-stash':  'git stash list',
+  'disk':       os.platform() === 'win32' ? 'wmic logicaldisk get caption,freespace,size' : 'df -h .',
+  'ps-node':    os.platform() === 'win32' ? 'tasklist /FI "IMAGENAME eq node.exe"' : 'ps aux | grep -E "node|npm" | grep -v grep',
 };
+
+// ─── GET /api/tools/env ──────────────────────────────────────
+const ENV_KEYS  = ['PORT','HOST','NODE_ENV','GITHUB_REPO','GITHUB_BRANCH','SANAYI_API_URL','MAX_UPLOAD_SIZE_MB','SCAN_RATE_LIMIT_PER_MIN'];
+const MASK_KEYS = ['VERCEL_TOKEN','SANAYI_API_KEY','FIELD_DEVICE_KEY'];
+
+router.get('/env', (_req, res) => {
+  const result = {};
+  for (const k of [...ENV_KEYS, ...MASK_KEYS]) {
+    const v = process.env[k];
+    if (v) result[k] = MASK_KEYS.includes(k) ? v.slice(0, 4) + '***' : v;
+    else   result[k] = null;
+  }
+  res.json(result);
+});
 
 router.get('/cmd/:name', async (req, res) => {
   const name = req.params.name;
-  const cmd  = SAFE_CMDS[name];
+
+  // Built-in env-check — cross-platform, no shell quoting issues
+  if (name === 'env-check') {
+    const lines = [...ENV_KEYS, ...MASK_KEYS].map(k => {
+      const v = process.env[k];
+      if (!v) return `${k} = (not set)`;
+      return `${k} = ${MASK_KEYS.includes(k) ? v.slice(0, 4) + '***' : v}`;
+    });
+    return res.json({ name, output: lines.join('\n'), error: false });
+  }
+
+  const cmd = SAFE_CMDS[name];
   if (!cmd) return res.status(400).json({ error: 'Bilinmeyen komut: ' + name });
 
   exec(cmd, { cwd: ROOT, timeout: 20000 }, (err, stdout, stderr) => {

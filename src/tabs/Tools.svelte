@@ -18,17 +18,17 @@
 
   const COMMANDS = [
     { id: 'git-status',  label: 'git status',   icon: '📋' },
-    { id: 'git-pull',    label: 'git pull',      icon: '⬇️' },
+    { id: 'git-pull',    label: 'git pull',      icon: '⬇' },
     { id: 'git-log',     label: 'git log',       icon: '📜' },
     { id: 'git-branch',  label: 'branches',      icon: '🌿' },
-    { id: 'git-diff',    label: 'diff --stat',   icon: '±' },
+    { id: 'git-diff',    label: 'diff --stat',   icon: '±'  },
+    { id: 'git-stash',   label: 'stash list',    icon: '📌' },
     { id: 'npm-list',    label: 'npm list',      icon: '📦' },
     { id: 'node-v',      label: 'node -v',       icon: '🟩' },
     { id: 'disk',        label: 'disk usage',    icon: '💾' },
-    { id: 'ps-node',     label: 'node procs',    icon: '⚙️' },
-    { id: 'env-check',   label: 'env keys',      icon: '🔑' },
-    { id: 'git-stash',   label: 'stash list',    icon: '📌' },
-    { id: 'git-diff',    label: 'git diff',      icon: '🔍' },
+    { id: 'ps-node',     label: 'node procs',    icon: '⚙'  },
+    { id: 'env-check',   label: 'env vars',      icon: '🔑' },
+    { id: 'npm-v',       label: 'npm -v',        icon: '📦' },
   ];
 
   onMount(load);
