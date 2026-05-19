@@ -7,8 +7,11 @@
   let stats     = {};
   let projects  = [];
   let vercel    = [];
+  let history   = [];
   let countdown = 30;
   let timer;
+  let sseConnected = false;
+  let sseSub = null;
 
   let deferredPrompt = null;
   let showInstall    = false;
@@ -123,6 +126,8 @@
   // ── Load ───────────────────────────────────
   onMount(() => {
     load();
+    loadHistory();
+    connectMonitorSSE();
     timer = setInterval(() => {
       countdown--;
       if (countdown <= 0) load();
@@ -144,9 +149,31 @@
 
   onDestroy(() => {
     clearInterval(timer);
+    if (sseSub) sseSub.close();
     window.removeEventListener('beforeinstallprompt', onInstallPrompt);
     window.removeEventListener('fd-refresh', load);
   });
+
+  function connectMonitorSSE() {
+    if (sseSub) sseSub.close();
+    sseSub = new EventSource('/api/monitor/stream');
+    sseSub.addEventListener('status-change', (e) => {
+      try {
+        const ev = JSON.parse(e.data);
+        history = [ev, ...history].slice(0, 30);
+        sseConnected = true;
+      } catch {}
+    });
+    sseSub.addEventListener('checked', () => { sseConnected = true; });
+    sseSub.onerror = () => { sseConnected = false; };
+  }
+
+  async function loadHistory() {
+    try {
+      const h = await fetch('/api/monitor/history?limit=20').then(r => r.json());
+      history = Array.isArray(h) ? h : [];
+    } catch {}
+  }
 
   function onInstallPrompt(e) {
     e.preventDefault();
@@ -428,10 +455,29 @@
   {/if}
 </div>
 
+{#if history.length > 0}
+  <div class="sec">Up/Down Geçmişi</div>
+  <div class="group" style="margin-bottom:8px">
+    {#each history.slice(0, 10) as h}
+      <div class="row">
+        <div class="row-icon" style="background:{h.event === 'down' ? 'rgba(239,68,68,.08)' : 'rgba(16,185,129,.08)'}">
+          <span style="font-size:16px">{h.event === 'down' ? '↓' : '↑'}</span>
+        </div>
+        <div class="row-body">
+          <div class="row-title">{h.name}</div>
+          <div class="row-sub">{new Date(h.ts).toLocaleString('tr-TR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })}{h.ms ? ' · ' + h.ms + 'ms' : ''}</div>
+        </div>
+        <span class="tag {h.event === 'down' ? 'red' : 'green'}">{h.event}</span>
+      </div>
+    {/each}
+  </div>
+{/if}
+
 <div style="margin-top:16px">
   <button class="action-btn action-btn-inline" style="width:100%" on:click={load}>
     <span style="color:var(--c-blue);font-size:16px">↻</span>
     <span class="action-title">Hemen Yenile</span>
+    <span class="sse-dot" class:live={sseConnected} style="margin-left:4px"></span>
   </button>
 </div>
 <div class="countdown-wrap">

@@ -46,14 +46,15 @@ const staticPath = fs.existsSync(distPath) ? distPath : publicPath;
 app.use(express.static(staticPath));
 
 // ─── API routes ───────────────────────────────────────────────
-app.use('/api/projects', require('./routes/projects'));
-app.use('/api/monitor',  require('./routes/monitor'));
-app.use('/api/vercel',   require('./routes/vercel'));
-app.use('/api/events',   require('./routes/events'));
-app.use('/api/tools',    require('./routes/tools'));
-app.use('/api/history',  require('./routes/history'));
-app.use('/api/health',   require('./routes/health'));
-app.use('/api/scanner',  require('./routes/scanner'));
+app.use('/api/projects',  require('./routes/projects'));
+app.use('/api/monitor',   require('./routes/monitor'));
+app.use('/api/vercel',    require('./routes/vercel'));
+app.use('/api/events',    require('./routes/events'));
+app.use('/api/tools',     require('./routes/tools'));
+app.use('/api/history',   require('./routes/history'));
+app.use('/api/health',    require('./routes/health'));
+app.use('/api/scanner',   require('./routes/scanner'));
+app.use('/api/webhooks',  require('./routes/webhooks'));
 
 // ─── Unknown API routes ───────────────────────────────────────
 app.use('/api/*', (_req, res) => {
@@ -84,6 +85,9 @@ const server = app.listen(PORT, HOST, () => {
   console.log(`  │  http://${HOST}:${PORT}                 │`);
   console.log(`  │  Ortam: ${(process.env.NODE_ENV || 'production').padEnd(13)}               │`);
   console.log(`  └─────────────────────────────────────────┘\n`);
+  require('./workers/healthMonitor').start();
+  require('./workers/watchdog').start();
+  require('./workers/cleaner').start();
   require('./workers/updater').start();
 });
 

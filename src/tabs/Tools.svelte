@@ -293,6 +293,47 @@
   </div>
 {/if}
 
+<!-- Background Workers -->
+<div class="sec">Arka Plan İşleri</div>
+<div class="group" style="margin-bottom:16px">
+  {#each [
+    { name: 'Health Monitor', desc: '60s periyot — servis up/down takibi', icon: '💓' },
+    { name: 'Watchdog',       desc: '2dk periyot — bellek + sistem izleme', icon: '🐕' },
+    { name: 'Cleaner',        desc: '6sa periyot — eski log/scan temizliği', icon: '🧹' },
+    { name: 'Auto-Updater',   desc: '5dk periyot — GitHub commit kontrolü',  icon: '🔄' },
+  ] as w}
+    <div class="row">
+      <div class="row-icon" style="background:rgba(16,185,129,.08)">{w.icon}</div>
+      <div class="row-body">
+        <div class="row-title">{w.name}</div>
+        <div class="row-sub">{w.desc}</div>
+      </div>
+      <span class="badge online"><div class="led green"></div> aktif</span>
+    </div>
+  {/each}
+</div>
+
+<!-- Webhook URLs -->
+<div class="sec">Webhook URL'leri</div>
+<div class="group" style="margin-bottom:16px">
+  {#each ['github', 'vercel'] as src}
+    {@const hookUrl = (qrUrl || (typeof location !== 'undefined' ? `http://${location.hostname}:8787` : '')) + `/api/webhooks/${src}`}
+    <div class="row">
+      <div class="row-body">
+        <div class="row-title">{src === 'github' ? 'GitHub' : 'Vercel'} Hook</div>
+        <div class="row-sub" style="font-family:var(--mono);font-size:10px;word-break:break-all">{hookUrl}</div>
+      </div>
+      <button class="copy-btn" on:click={() => navigator.clipboard?.writeText(hookUrl)}>📋</button>
+    </div>
+  {/each}
+  <div class="row">
+    <div class="row-body">
+      <div class="row-title">GitHub Secret (opsiyonel)</div>
+      <div class="row-sub">GITHUB_WEBHOOK_SECRET env değişkeni ile imza doğrulama</div>
+    </div>
+  </div>
+</div>
+
 <!-- Ping -->
 <div class="sec">Hızlı Kontrol</div>
 <div class="action-grid">

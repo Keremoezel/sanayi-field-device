@@ -4,27 +4,32 @@
 
   export let badge = 0;
 
-  let allLogs    = { remote: [], local: [] };
-  let srcFilter  = 'all';
-  let typeFilter = 'all';
+  let allLogs     = { remote: [], local: [], webhooks: [] };
+  let srcFilter   = 'all';
+  let typeFilter  = 'all';
   let searchQuery = '';
-  let sseConnected = false;
-  let es = null;
+  let sseConnected  = false;
+  let webhookSse    = false;
+  let es  = null;
+  let esW = null;
 
   onMount(() => {
     load();
     connectSSE();
+    connectWebhookSSE();
   });
 
   onDestroy(() => {
-    if (es) es.close();
+    if (es)  es.close();
+    if (esW) esW.close();
   });
 
   async function load() {
     try {
-      const [remoteData, localData] = await Promise.all([
+      const [remoteData, localData, webhookData] = await Promise.all([
         fetch('/api/events').then(r => r.json()),
         fetch('/api/tools/logs').then(r => r.json()),
+        fetch('/api/webhooks/events').then(r => r.json()),
       ]);
 
       const normRemote = [];
@@ -42,11 +47,41 @@
         });
       }
 
-      allLogs.remote = normRemote;
-      allLogs.local  = localData.map(l => normalizeLocal(l));
+      allLogs.remote   = normRemote;
+      allLogs.local    = localData.map(l => normalizeLocal(l));
+      allLogs.webhooks = (Array.isArray(webhookData) ? webhookData : []).map(normalizeWebhook);
       allLogs = { ...allLogs };
       badge = 0;
     } catch {}
+  }
+
+  function normalizeWebhook(w) {
+    const typeMap = { push: 'info', pull_request: 'info', workflow_run: 'warn', 'deployment.error': 'error', ERROR: 'error' };
+    const t = typeMap[w.event || w.type] || (w.state === 'ERROR' ? 'error' : 'info');
+    const label = w.source === 'github'
+      ? `${w.event} — ${w.repo}${w.branch && w.branch !== '?' ? ' (' + w.branch + ')' : ''}`
+      : `${w.type} — ${w.name} [${w.state}]`;
+    return {
+      _source: 'webhooks', _project: w.source === 'github' ? 'GitHub' : 'Vercel',
+      id: w.ts + Math.random(), ts: w.ts,
+      type: t, msg: label,
+      meta: w.commit || w.url || null,
+      raw: w,
+    };
+  }
+
+  function connectWebhookSSE() {
+    if (esW) { esW.close(); esW = null; }
+    esW = new EventSource('/api/webhooks/stream');
+    esW.addEventListener('webhook', (e) => {
+      try {
+        const norm = normalizeWebhook(JSON.parse(e.data));
+        allLogs = { ...allLogs, webhooks: [norm, ...allLogs.webhooks].slice(0, 100) };
+        webhookSse = true;
+      } catch {}
+    });
+    esW.onopen  = () => { webhookSse = true; };
+    esW.onerror = () => { webhookSse = false; };
   }
 
   function normalizeLocal(l) {
@@ -74,8 +109,9 @@
 
   $: combined = (() => {
     let list = [];
-    if (srcFilter === 'all' || srcFilter === 'remote') list = list.concat(allLogs.remote);
-    if (srcFilter === 'all' || srcFilter === 'device') list = list.concat(allLogs.local);
+    if (srcFilter === 'all' || srcFilter === 'remote')   list = list.concat(allLogs.remote);
+    if (srcFilter === 'all' || srcFilter === 'device')   list = list.concat(allLogs.local);
+    if (srcFilter === 'all' || srcFilter === 'webhooks') list = list.concat(allLogs.webhooks);
     if (typeFilter !== 'all') list = list.filter(l => l.type === typeFilter);
     return list.sort((a, b) => b.ts - a.ts);
   })();
@@ -137,12 +173,13 @@
 </script>
 
 <div class="ftabs">
-  <button class="ftab" class:active={srcFilter === 'all'}    on:click={() => srcFilter = 'all'}>Tümü</button>
-  <button class="ftab" class:active={srcFilter === 'device'} on:click={() => srcFilter = 'device'}>Device</button>
-  <button class="ftab" class:active={srcFilter === 'remote'} on:click={() => srcFilter = 'remote'}>Remote</button>
-  <span style="margin-left:auto;display:flex;align-items:center;font-size:10px;color:var(--c-t3)">
+  <button class="ftab" class:active={srcFilter === 'all'}      on:click={() => srcFilter = 'all'}>Tümü</button>
+  <button class="ftab" class:active={srcFilter === 'device'}   on:click={() => srcFilter = 'device'}>Device</button>
+  <button class="ftab" class:active={srcFilter === 'remote'}   on:click={() => srcFilter = 'remote'}>Remote</button>
+  <button class="ftab" class:active={srcFilter === 'webhooks'} on:click={() => srcFilter = 'webhooks'}>Webhooks</button>
+  <span style="margin-left:auto;display:flex;align-items:center;gap:5px;font-size:10px;color:var(--c-t3);flex-shrink:0">
     <span class="sse-dot" class:live={sseConnected}></span>
-    {sseConnected ? 'Live' : 'Polling'}
+    <span class="sse-dot" class:live={webhookSse} style="background:var(--c-purple)"></span>
   </span>
 </div>
 
