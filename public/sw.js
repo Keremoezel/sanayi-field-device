@@ -1,53 +1,50 @@
-const CACHE  = 'field-device-v4';
-const STATIC = [
+const CACHE_NAME = 'field-device-v1';
+const ASSETS = [
   '/',
   '/index.html',
-  '/manifest.json',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
+  '/style.css',
+  '/manifest.json'
 ];
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(STATIC)));
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS);
+    })
+  );
   self.skipWaiting();
 });
 
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-    )
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keyList) => {
+      return Promise.all(keyList.map((key) => {
+        if (key !== CACHE_NAME) {
+          return caches.delete(key);
+        }
+      }));
+    })
   );
   self.clients.claim();
 });
 
-self.addEventListener('fetch', (e) => {
-  const { pathname } = new URL(e.request.url);
-
-  // API: her zaman network, offline'da hata dön
-  if (pathname.startsWith('/api/')) {
-    e.respondWith(
-      fetch(e.request).catch(() =>
-        new Response(JSON.stringify({ error: 'offline' }), {
-          headers: { 'Content-Type': 'application/json' },
-        })
-      )
-    );
+self.addEventListener('fetch', (event) => {
+  // API isteklerini cache'leme
+  if (event.request.url.includes('/api/')) {
+    event.respondWith(fetch(event.request));
     return;
   }
 
-  // HTML + statik dosyalar: cache-first, arka planda güncelle (stale-while-revalidate)
-  e.respondWith(
-    caches.open(CACHE).then(async (cache) => {
-      const cached = await cache.match(e.request);
-      const fetchPromise = fetch(e.request).then((res) => {
-        if (res.ok) cache.put(e.request, res.clone());
-        return res;
-      }).catch(() => null);
-
-      // Cache varsa hemen dön, arka planda yenile
-      // Cache yoksa network'ü bekle
-      return cached || fetchPromise;
-    })
+  // Statik dosyaları Network-First, yoksa Cache'ten getir (geliştirme aşaması için daha iyi)
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        const resClone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, resClone);
+        });
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });

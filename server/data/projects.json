@@ -4,9 +4,10 @@
     "name": "Sanayi Uygulaması",
     "url": "https://sanayi-uygulamasi.vercel.app",
     "healthPath": "/api/health",
+    "scannerPath": "/api/damage-analyses",
     "host": "vercel",
-    "color": "#3b82f6",
-    "features": ["scanner", "monitor"]
+    "color": "#4f8ef7",
+    "features": ["scanner", "monitor", "events"]
   },
   {
     "id": "zanzibar",
@@ -14,7 +15,7 @@
     "url": "https://www.zanzibarbarisdernegi.org.tr",
     "healthPath": "/api/health",
     "host": "coolify",
-    "color": "#10b981",
+    "color": "#34d988",
     "features": []
   }
 ]

@@ -3,350 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#000000" />
+  <meta name="theme-color" content="#080810" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Field Device" />
   <link rel="manifest" href="/manifest.json" />
-  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-  <title>Field Device</title>
-  <style>
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0; padding: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    :root {
-      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-      --mono: 'SF Mono', 'Menlo', ui-monospace, 'Courier New', monospace;
-
-      --c-bg:      #000;
-      --c-s1:      #0d0d0d;
-      --c-s2:      #141414;
-      --c-s3:      #1c1c1c;
-      --c-line:    #222;
-      --c-line2:   #2a2a2a;
-
-      --c-t1:      #f2f2f2;
-      --c-t2:      #a0a0a0;
-      --c-t3:      #555;
-
-      --c-green:   #30d158;
-      --c-red:     #ff453a;
-      --c-yellow:  #ffd60a;
-      --c-orange:  #ff9f0a;
-      --c-blue:    #0a84ff;
-      --c-purple:  #bf5af2;
-      --c-teal:    #5ac8fa;
-
-      --nav-h:     56px;
-      --header-h:  60px;
-      --radius:    14px;
-      --radius-sm: 9px;
-    }
-
-    html { background: var(--c-bg); }
-
-    body {
-      font-family: var(--font);
-      background: var(--c-bg);
-      color: var(--c-t1);
-      height: 100dvh;
-      overflow: hidden;
-    }
-
-    /* ─── Header ─────────────────────────────────── */
-    #header {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      height: var(--header-h);
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 16px;
-      background: rgba(0,0,0,0.85);
-      backdrop-filter: saturate(180%) blur(20px);
-      -webkit-backdrop-filter: saturate(180%) blur(20px);
-      border-bottom: 0.5px solid var(--c-line);
-    }
-    .header-brand { display: flex; flex-direction: column; gap: 1px; }
-    .header-label { font-size: 10px; color: var(--c-t3); letter-spacing: 0.1em; text-transform: uppercase; font-family: var(--mono); }
-    .header-title { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
-
-    .header-right { display: flex; align-items: center; gap: 6px; }
-    .status-pill {
-      display: flex; align-items: center; gap: 5px;
-      background: var(--c-s2); border: 0.5px solid var(--c-line2);
-      border-radius: 20px; padding: 4px 10px;
-      font-family: var(--mono); font-size: 11px; color: var(--c-t2);
-    }
-    .led {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--c-t3); flex-shrink: 0;
-    }
-    .led.green { background: var(--c-green); box-shadow: 0 0 6px var(--c-green); }
-    .led.red   { background: var(--c-red); }
-    .led.pulse { animation: ledpulse 2s ease-in-out infinite; }
-    @keyframes ledpulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-
-    /* ─── Main scroll area ───────────────────────── */
-    #main {
-      position: fixed;
-      top: var(--header-h);
-      left: 0; right: 0;
-      bottom: var(--nav-h);
-      overflow-y: auto;
-      overflow-x: hidden;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .tab-page {
-      display: none;
-      padding: 16px 16px 24px;
-      min-height: 100%;
-      animation: pagein .2s ease;
-    }
-    .tab-page.active { display: block; }
-    @keyframes pagein { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
-
-    /* ─── Bottom Nav ─────────────────────────────── */
-    #nav {
-      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
-      height: var(--nav-h);
-      display: flex; align-items: stretch;
-      background: rgba(0,0,0,0.9);
-      backdrop-filter: saturate(180%) blur(20px);
-      -webkit-backdrop-filter: saturate(180%) blur(20px);
-      border-top: 0.5px solid var(--c-line);
-      padding-bottom: env(safe-area-inset-bottom, 0);
-    }
-    .nav-btn {
-      flex: 1; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 3px;
-      background: none; border: none; cursor: pointer;
-      padding: 6px 4px; color: var(--c-t3);
-      transition: color .15s;
-    }
-    .nav-btn.active { color: var(--c-blue); }
-    .nav-icon { font-size: 20px; line-height: 1; }
-    .nav-label { font-size: 9px; letter-spacing: 0.02em; font-weight: 500; }
-
-    /* ─── Section headers ────────────────────────── */
-    .section-header {
-      font-size: 11px; font-weight: 600; color: var(--c-t3);
-      text-transform: uppercase; letter-spacing: 0.08em;
-      margin: 20px 0 8px 4px;
-    }
-    .section-header:first-child { margin-top: 4px; }
-
-    /* ─── Grouped list (iOS style) ───────────────── */
-    .group {
-      background: var(--c-s1);
-      border-radius: var(--radius);
-      overflow: hidden;
-    }
-    .row {
-      display: flex; align-items: center;
-      padding: 12px 16px; gap: 12px;
-      border-bottom: 0.5px solid var(--c-line);
-      min-height: 48px;
-    }
-    .row:last-child { border-bottom: none; }
-    .row-icon {
-      width: 30px; height: 30px; border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 15px; flex-shrink: 0;
-    }
-    .row-body { flex: 1; min-width: 0; }
-    .row-title { font-size: 15px; font-weight: 500; }
-    .row-sub   { font-size: 12px; color: var(--c-t2); margin-top: 1px; }
-    .row-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-
-    /* ─── Status badge ───────────────────────────── */
-    .badge {
-      display: inline-flex; align-items: center; gap: 4px;
-      font-size: 12px; font-weight: 600;
-    }
-    .badge.online  { color: var(--c-green); }
-    .badge.offline { color: var(--c-red); }
-    .badge.warn    { color: var(--c-yellow); }
-    .badge.muted   { color: var(--c-t3); }
-
-    /* ─── Stats grid ─────────────────────────────── */
-    .stats-grid {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-    .stat-card {
-      background: var(--c-s1); border-radius: var(--radius);
-      padding: 14px;
-    }
-    .stat-label { font-size: 11px; color: var(--c-t3); font-weight: 500; margin-bottom: 6px; }
-    .stat-value { font-size: 22px; font-weight: 700; font-family: var(--mono); line-height: 1; }
-    .stat-value.green  { color: var(--c-green); }
-    .stat-value.red    { color: var(--c-red); }
-    .stat-value.blue   { color: var(--c-blue); }
-    .stat-value.muted  { color: var(--c-t3); }
-    .stat-sub  { font-size: 11px; color: var(--c-t2); margin-top: 4px; }
-
-    /* ─── Services 2×2 grid ──────────────────────── */
-    .services-grid {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-    .svc-card {
-      background: var(--c-s1); border-radius: var(--radius);
-      padding: 14px;
-      border-left: 3px solid var(--c-line2);
-    }
-    .svc-card.ok      { border-left-color: var(--c-green); }
-    .svc-card.down    { border-left-color: var(--c-red); }
-    .svc-card.unknown { border-left-color: var(--c-line2); }
-    .svc-name  { font-size: 10px; color: var(--c-t3); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; margin-bottom: 6px; }
-    .svc-val   { font-size: 14px; font-weight: 700; }
-    .svc-val.ok   { color: var(--c-green); }
-    .svc-val.down { color: var(--c-red); }
-    .svc-val.muted { color: var(--c-t3); }
-    .svc-ms    { font-size: 10px; color: var(--c-t3); margin-top: 3px; font-family: var(--mono); }
-
-    /* ─── Tag chips ──────────────────────────────── */
-    .tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px; }
-    .tag {
-      font-size: 10px; font-family: var(--mono);
-      padding: 2px 7px; border-radius: 5px;
-      background: var(--c-s3); color: var(--c-t2);
-    }
-    .tag.green  { background: #30d15818; color: var(--c-green); }
-    .tag.red    { background: #ff453a18; color: var(--c-red); }
-    .tag.yellow { background: #ffd60a18; color: var(--c-yellow); }
-    .tag.orange { background: #ff9f0a18; color: var(--c-orange); }
-    .tag.blue   { background: #0a84ff18; color: var(--c-blue); }
-    .tag.purple { background: #bf5af218; color: var(--c-purple); }
-
-    /* ─── Action buttons ─────────────────────────── */
-    .action-grid {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-    .action-btn {
-      display: flex; flex-direction: column; align-items: flex-start;
-      gap: 6px; background: var(--c-s1); border: none;
-      border-radius: var(--radius); padding: 14px;
-      cursor: pointer; font-family: var(--font);
-      text-align: left; transition: background .1s;
-    }
-    .action-btn:active { background: var(--c-s3); }
-    .action-icon { font-size: 20px; }
-    .action-title { font-size: 14px; font-weight: 600; color: var(--c-t1); }
-    .action-sub   { font-size: 11px; color: var(--c-t2); }
-
-    /* ─── Log feed ───────────────────────────────── */
-    .log-row {
-      display: flex; gap: 10px; padding: 10px 16px;
-      border-bottom: 0.5px solid var(--c-line);
-      font-size: 12px; line-height: 1.4;
-    }
-    .log-row:last-child { border-bottom: none; }
-    .log-time { font-family: var(--mono); color: var(--c-t3); flex-shrink: 0; font-size: 11px; padding-top: 1px; min-width: 48px; }
-    .log-body { flex: 1; }
-    .log-msg  { color: var(--c-t1); }
-    .log-msg.ok   { color: var(--c-green); }
-    .log-msg.err  { color: var(--c-red); }
-    .log-msg.warn { color: var(--c-yellow); }
-    .log-meta { font-size: 10px; color: var(--c-t3); margin-top: 2px; font-family: var(--mono); }
-
-    /* ─── Ping result ────────────────────────────── */
-    .ping-result {
-      background: var(--c-s2); border-radius: var(--radius-sm);
-      padding: 12px 14px; font-family: var(--mono); font-size: 12px;
-      color: var(--c-t2); white-space: pre; margin-top: 8px;
-      border: 0.5px solid var(--c-line);
-    }
-    .ping-result.ok  { color: var(--c-green); border-color: #30d15830; background: #30d15808; }
-    .ping-result.err { color: var(--c-red);   border-color: #ff453a30; background: #ff453a08; }
-
-    /* ─── Scanner placeholder ────────────────────── */
-    .scanner-hero {
-      display: flex; flex-direction: column; align-items: center;
-      justify-content: center; padding: 48px 24px; text-align: center;
-      gap: 12px;
-    }
-    .scanner-icon-wrap {
-      width: 88px; height: 88px; border-radius: 28px;
-      background: #ff9f0a15; border: 1.5px solid #ff9f0a30;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 40px; margin-bottom: 4px;
-    }
-    .scanner-badge {
-      display: inline-block; font-size: 10px; font-weight: 700;
-      letter-spacing: 0.1em; padding: 4px 12px; border-radius: 20px;
-      background: #ff9f0a18; border: 1px solid #ff9f0a40;
-      color: var(--c-orange); text-transform: uppercase;
-    }
-    .roadmap-step {
-      display: flex; align-items: flex-start; gap: 10px;
-      padding: 10px 0; border-bottom: 0.5px solid var(--c-line);
-    }
-    .roadmap-step:last-child { border-bottom: none; }
-    .step-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      margin-top: 4px; flex-shrink: 0;
-    }
-    .step-dot.done    { background: var(--c-green); }
-    .step-dot.current { background: var(--c-orange); box-shadow: 0 0 6px var(--c-orange); }
-    .step-dot.todo    { background: var(--c-line2); }
-    .step-text { font-size: 13px; color: var(--c-t2); line-height: 1.4; }
-    .step-text b { color: var(--c-t1); }
-
-    /* ─── History empty ──────────────────────────── */
-    .empty {
-      display: flex; flex-direction: column; align-items: center;
-      padding: 60px 24px; gap: 10px; text-align: center;
-    }
-    .empty-icon { font-size: 44px; opacity: .3; }
-    .empty-title { font-size: 15px; font-weight: 600; color: var(--c-t2); }
-    .empty-sub   { font-size: 13px; color: var(--c-t3); }
-
-    /* ─── Spinner ────────────────────────────────── */
-    .spin {
-      display: inline-block; width: 14px; height: 14px;
-      border: 1.5px solid var(--c-line2); border-top-color: var(--c-blue);
-      border-radius: 50%; animation: spinning .7s linear infinite;
-    }
-    @keyframes spinning { to { transform: rotate(360deg); } }
-
-    /* ─── PWA install banner ─────────────────────── */
-    #installBanner {
-      display: none; align-items: center; justify-content: space-between;
-      gap: 12px; margin-bottom: 12px;
-      background: #0a84ff10; border: 0.5px solid #0a84ff30;
-      border-radius: var(--radius); padding: 12px 14px;
-    }
-    #installBanner.show { display: flex; }
-    .install-text { flex: 1; font-size: 13px; }
-    .install-text small { font-size: 11px; color: var(--c-t2); display: block; margin-top: 2px; }
-    .install-ok {
-      background: var(--c-blue); color: #fff; border: none;
-      border-radius: 8px; padding: 7px 14px; font-size: 13px;
-      font-weight: 600; font-family: var(--font); cursor: pointer; flex-shrink: 0;
-    }
-    .install-x {
-      background: none; border: none; color: var(--c-t3);
-      font-size: 20px; cursor: pointer; padding: 0;
-    }
-
-    /* ─── Tab-specific project tabs ─────────────── */
-    .htabs { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 12px; scrollbar-width: none; }
-    .htabs::-webkit-scrollbar { display: none; }
-    .htab {
-      flex-shrink: 0; padding: 5px 14px; border-radius: 20px;
-      font-size: 12px; font-weight: 500; cursor: pointer;
-      background: var(--c-s2); border: 0.5px solid var(--c-line2);
-      color: var(--c-t2); font-family: var(--font);
-    }
-    .htab.active { background: #0a84ff18; border-color: #0a84ff40; color: var(--c-blue); }
-
-    a { color: inherit; text-decoration: none; }
-    button { font-family: var(--font); }
-  </style>
+  <!-- <link rel="apple-touch-icon" href="/icons/icon-192.png" /> -->
+  <title>Sanayi Field Device</title>
+  <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
 
@@ -356,118 +20,180 @@
     <div class="header-label">Sanayi</div>
     <div class="header-title">Field Device</div>
   </div>
-  <div class="header-right">
-    <div class="status-pill">
-      <div class="led green pulse"></div>
-      <span id="hUptime">—</span>
+  <div class="header-status">
+    <div class="h-pill">
+      <div class="led green pulse" id="hLed"></div>
+      <span class="name" id="hVersion">v1.0.0</span>
     </div>
-    <div class="status-pill" id="hClock">—</div>
+    <div class="h-pill" id="hClock">—</div>
   </div>
 </header>
 
-<!-- ─── Main content ────────────────────────────── -->
+<!-- ─── Main Content ────────────────────────────── -->
 <main id="main">
 
-  <!-- ── SCANNER tab ── -->
+  <!-- ── SCANNER TAB ── -->
   <div class="tab-page" id="tab-scanner">
-    <div class="scanner-hero">
-      <div class="scanner-icon-wrap">📷</div>
-      <h2 style="font-size:20px;font-weight:700">Live Damage Scanner</h2>
-      <p style="font-size:13px;color:var(--c-t2);max-width:280px;line-height:1.5">
-        Canlı kamera görüntüsü üzerinden araç hasarını AI ile tespit eder.
-      </p>
-      <div class="scanner-badge">Faz 2 — Yapım Aşamasında</div>
+    <div class="sec">Live Damage Scanner</div>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <div class="scanner-wrap">
+        <video id="scanVideo" class="scanner-video" autoplay playsinline muted></video>
+        <canvas id="scanCanvas" class="scanner-canvas"></canvas>
+        <div class="scanner-overlay" id="scanOverlay">
+          <div class="scanner-corner tl"></div>
+          <div class="scanner-corner tr"></div>
+          <div class="scanner-corner bl"></div>
+          <div class="scanner-corner br"></div>
+        </div>
+        <div id="scanPlaceholder" class="scanner-placeholder">
+          <div class="scanner-icon">📷</div>
+          <div style="font-size:14px; font-weight:600">Kamera Kapalı</div>
+          <div style="font-size:12px; color:var(--c-t2)">Hasar taraması için kamerayı açın</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="scan-btn-row" id="scanControlsStart">
+      <button class="scan-btn blue" onclick="startCamera()">Kamerayı Aç</button>
+    </div>
+    
+    <div class="scan-btn-row" id="scanControlsAction" style="display:none;">
+      <button class="scan-btn primary" id="btnCapture" onclick="captureAndAnalyze()">📸 Fotoğraf Çek & Analiz Et</button>
+      <button class="scan-btn secondary" onclick="stopCamera()">Kapat</button>
     </div>
 
-    <div class="section-header">Yol Haritası</div>
+    <div id="scanResult" style="display:none;">
+      <div class="scan-result-bar">
+        <div>
+          <span style="color:var(--c-t2)">Son Analiz:</span>
+          <span id="resTime" style="font-weight:600; font-family:var(--mono); margin-left:6px">az önce</span>
+        </div>
+        <div>
+          <span id="resRiskBadge" class="tag" style="font-size:12px; padding:3px 8px;">—</span>
+        </div>
+      </div>
+      <div class="scan-btn-row">
+        <button class="scan-btn secondary" id="btnSave" onclick="saveScanLocal()">💾 Yerel Kaydet</button>
+        <button class="scan-btn blue" id="btnSend" onclick="sendScanSanayi()">📤 Sanayi'ye Gönder</button>
+      </div>
+    </div>
+
+    <div class="sec" style="margin-top:24px">Yol Haritası</div>
     <div class="group" style="padding:4px 16px">
-      <div class="roadmap-step"><div class="step-dot done"></div><div class="step-text"><b>Faz 0</b> — Local server + web arayüz</div></div>
-      <div class="roadmap-step"><div class="step-dot done"></div><div class="step-text"><b>Faz 1</b> — System monitor + developer tools</div></div>
-      <div class="roadmap-step"><div class="step-dot current"></div><div class="step-text"><b>Faz 2</b> — Fotoğraf çek → AI'ya gönder → sonucu göster</div></div>
-      <div class="roadmap-step"><div class="step-dot todo"></div><div class="step-text"><b>Faz 3</b> — Canlı kamera + her 2s periyodik analiz + overlay</div></div>
-      <div class="roadmap-step"><div class="step-dot todo"></div><div class="step-text"><b>Faz 4</b> — Sanayi backend sync + scan history</div></div>
+      <div class="roadmap-step"><div class="step-dot done"></div><div class="step-text"><b>Faz 0-1</b> — Altyapı, API, Monitör UI</div></div>
+      <div class="roadmap-step"><div class="step-dot done"></div><div class="step-text"><b>Faz 2</b> — Fotoğraf çek → AI'ya gönder</div></div>
+      <div class="roadmap-step"><div class="step-dot current"></div><div class="step-text"><b>Faz 3</b> — Backend Senkronizasyonu</div></div>
+      <div class="roadmap-step"><div class="step-dot todo"></div><div class="step-text"><b>Faz 4</b> — Canlı periyodik analiz (2sn)</div></div>
     </div>
   </div>
 
-  <!-- ── MONITOR tab ── -->
+  <!-- ── MONITOR TAB ── -->
   <div class="tab-page active" id="tab-monitor">
-
     <div id="installBanner">
       <div class="install-text">
         Ana ekrana ekle
-        <small>Uygulama gibi aç — tarayıcı yok</small>
+        <small>Uygulama gibi tam ekran kullanın</small>
       </div>
       <button class="install-ok" id="installBtn">Ekle</button>
       <button class="install-x" onclick="document.getElementById('installBanner').classList.remove('show')">×</button>
     </div>
 
-    <div class="section-header">Sanayi — Servisler</div>
-    <div class="services-grid" id="sanayiGrid">
+    <div class="sec">Sanayi Servisleri</div>
+    <div class="svc-grid" id="sanayiGrid">
       <div class="svc-card unknown"><div class="svc-name">API</div><div class="svc-val muted">—</div></div>
       <div class="svc-card unknown"><div class="svc-name">Database</div><div class="svc-val muted">—</div></div>
       <div class="svc-card unknown"><div class="svc-name">AI Model</div><div class="svc-val muted">—</div></div>
       <div class="svc-card unknown"><div class="svc-name">Blob</div><div class="svc-val muted">—</div></div>
     </div>
 
-    <div class="section-header">Projeler</div>
-    <div class="group" id="projectList">
-      <div class="row"><div class="row-body"><div class="row-title" style="color:var(--c-t3)">Kontrol ediliyor...</div></div><div class="spin"></div></div>
+    <div class="sec">Ortam Bilgisi (Sanayi)</div>
+    <div class="stats-grid" id="sanayiStats">
+      <div class="stat-card">
+        <div class="stat-label">Environment</div>
+        <div class="stat-value blue" id="stEnv">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Versiyon</div>
+        <div class="stat-value" id="stVer">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Bugünkü Analiz</div>
+        <div class="stat-value" id="stScans">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Ort. Yanıt</div>
+        <div class="stat-value" id="stAvg">—</div>
+      </div>
     </div>
 
-    <div class="section-header">Vercel — Son Deploylar</div>
+    <div class="sec">Projelerim</div>
+    <div class="group" id="projectList">
+      <div class="row"><div class="row-body"><div class="row-title" style="color:var(--c-t3)">Yükleniyor...</div></div><div class="spin"></div></div>
+    </div>
+
+    <div class="sec">Vercel Deploylar</div>
     <div class="group" id="vercelList">
       <div class="row"><div class="row-body"><div class="row-title" style="color:var(--c-t3)">Yükleniyor...</div></div><div class="spin"></div></div>
     </div>
 
     <div style="margin-top:16px;display:flex;gap:8px">
-      <button class="action-btn" style="flex:1;flex-direction:row;align-items:center;padding:12px 16px" onclick="loadMonitor()">
+      <button class="action-btn" style="flex:1;flex-direction:row;align-items:center;padding:12px 16px;justify-content:center" onclick="loadMonitor()">
         <span style="color:var(--c-blue);font-size:16px">↻</span>
-        <span style="font-size:14px;font-weight:600;color:var(--c-t1)">Yenile</span>
+        <span style="font-size:14px;font-weight:600;color:var(--c-t1)">Hemen Yenile</span>
       </button>
-      <div style="flex:1;background:var(--c-s1);border-radius:var(--radius);padding:12px 16px">
-        <div style="font-size:10px;color:var(--c-t3);text-transform:uppercase;letter-spacing:.08em;font-weight:600">Son Kontrol</div>
-        <div style="font-size:13px;margin-top:3px;font-family:var(--mono)" id="lastChecked">—</div>
-      </div>
     </div>
+    <div class="countdown-wrap"><div class="countdown-bar" id="monitorCountdown"></div></div>
   </div>
 
-  <!-- ── HISTORY tab ── -->
+  <!-- ── HISTORY TAB ── -->
   <div class="tab-page" id="tab-history">
+    <div class="ftabs">
+      <button class="ftab active" onclick="filterHistory('all', this)">Tümü</button>
+      <button class="ftab" onclick="filterHistory('synced', this)">Gönderilenler</button>
+      <button class="ftab" onclick="filterHistory('local', this)">Bekleyenler</button>
+    </div>
     <div id="historyList"></div>
   </div>
 
-  <!-- ── LOGS tab ── -->
+  <!-- ── LOGS TAB ── -->
   <div class="tab-page" id="tab-logs">
-    <div class="htabs" id="logTabs">
-      <button class="htab active" onclick="filterLogs(null,this)">Tümü</button>
+    <div class="ftabs" id="logSourceTabs">
+      <button class="ftab active" data-src="all" onclick="filterLogSource('all', this)">Tümü</button>
+      <button class="ftab" data-src="device" onclick="filterLogSource('device', this)">Device Local</button>
     </div>
-    <div class="group" id="logFeed">
+    <div class="ftabs" id="logTypeTabs">
+      <button class="ftab active" data-type="all" onclick="filterLogType('all', this)">Tümü</button>
+      <button class="ftab" data-type="auth" onclick="filterLogType('auth', this)">Auth</button>
+      <button class="ftab" data-type="error" onclick="filterLogType('error', this)">Error</button>
+      <button class="ftab" data-type="warn" onclick="filterLogType('warn', this)">Warn</button>
+      <button class="ftab" data-type="info" onclick="filterLogType('info', this)">Info</button>
+    </div>
+    
+    <div class="group" id="logFeed" style="margin-bottom:12px">
       <div class="log-row"><div class="log-time">—</div><div class="log-body"><div class="log-msg" style="color:var(--c-t3)">Yükleniyor...</div></div></div>
     </div>
-    <div style="margin-top:12px">
-      <button class="action-btn" style="width:100%;flex-direction:row;align-items:center;padding:12px 16px;gap:8px;justify-content:center" onclick="loadLogs()">
-        <span style="color:var(--c-blue)">↻</span>
-        <span style="font-size:14px;font-weight:600;color:var(--c-t1)">Logları Yenile</span>
-      </button>
-    </div>
+    
+    <button class="action-btn" style="width:100%;flex-direction:row;align-items:center;padding:12px 16px;gap:8px;justify-content:center" onclick="loadLogs()">
+      <span style="color:var(--c-blue)">↻</span>
+      <span style="font-size:14px;font-weight:600;color:var(--c-t1)">Logları Yenile</span>
+    </button>
   </div>
 
-  <!-- ── TOOLS tab ── -->
+  <!-- ── TOOLS TAB ── -->
   <div class="tab-page" id="tab-tools">
-
-    <div class="section-header">Hızlı Kontrol</div>
+    <div class="sec">Hızlı Kontrol</div>
     <div class="action-grid">
-      <button class="action-btn" onclick="ping('sanayi')">
+      <button class="action-btn" onclick="pingNode('sanayi')">
         <div class="action-icon">🔵</div>
         <div class="action-title">Sanayi API</div>
         <div class="action-sub">vercel.app</div>
       </button>
-      <button class="action-btn" onclick="ping('zanzibar')">
+      <button class="action-btn" onclick="pingNode('zanzibar')">
         <div class="action-icon">🟢</div>
         <div class="action-title">Zanzibar</div>
         <div class="action-sub">coolify</div>
       </button>
-      <button class="action-btn" onclick="ping('local')">
+      <button class="action-btn" onclick="pingNode('local')">
         <div class="action-icon">🖥</div>
         <div class="action-title">Local Server</div>
         <div class="action-sub">localhost:8787</div>
@@ -478,50 +204,57 @@
         <div class="action-sub">hepsini kontrol et</div>
       </button>
     </div>
-    <div class="ping-result" id="pingResult">Ping için yukarıdan bir servis seç...</div>
+    <div class="ping-result" id="pingResult" style="display:none"></div>
 
-    <div class="section-header">Server</div>
+    <div class="sec">Server Bilgisi</div>
     <div class="group">
       <div class="row">
-        <div class="row-body">
-          <div class="row-title">Versiyon</div>
-          <div class="row-sub">Field Device</div>
-        </div>
-        <div class="row-right" style="font-family:var(--mono);font-size:13px;color:var(--c-t2)" id="toolVersion">—</div>
+        <div class="row-body"><div class="row-title">Versiyon</div></div>
+        <div class="row-right" style="font-family:var(--mono);font-size:13px;color:var(--c-blue)" id="toolVersion">—</div>
       </div>
       <div class="row">
-        <div class="row-body"><div class="row-title">Adres</div></div>
-        <div class="row-right" style="font-family:var(--mono);font-size:13px;color:var(--c-t2)">localhost:8787</div>
+        <div class="row-body"><div class="row-title">Uptime</div></div>
+        <div class="row-right" style="font-family:var(--mono);font-size:13px;color:var(--c-t1)" id="toolUptime">—</div>
       </div>
       <div class="row">
         <div class="row-body"><div class="row-title">Node.js</div></div>
         <div class="row-right" style="font-family:var(--mono);font-size:13px;color:var(--c-t2)" id="toolNode">—</div>
       </div>
       <div class="row">
+        <div class="row-body"><div class="row-title">Bellek (RSS)</div></div>
+        <div class="row-right" style="font-family:var(--mono);font-size:13px;color:var(--c-t2)" id="toolMem">—</div>
+      </div>
+      <div class="row">
         <div class="row-body">
-          <div class="row-title">Uptime</div>
+          <div class="row-title">GitHub Repo</div>
+          <div class="row-sub" id="toolRepo">—</div>
         </div>
-        <div class="row-right" style="font-family:var(--mono);font-size:13px;color:var(--c-t2)" id="toolUptime">—</div>
+        <div class="row-right" style="font-family:var(--mono);font-size:11px;color:var(--c-t2)" id="toolCommit">—</div>
+      </div>
+      <div class="row">
+        <div class="row-body"><div class="row-title">Çevre (Env)</div></div>
+        <div class="row-right" style="font-family:var(--mono);font-size:13px;color:var(--c-orange)" id="toolEnv">—</div>
       </div>
     </div>
 
-    <div class="section-header">Yönetim</div>
+    <div class="sec">Yönetim</div>
     <div class="group">
-      <div class="row" style="cursor:pointer" onclick="clearLogs()">
-        <div class="row-icon" style="background:#ffd60a15">🗑</div>
-        <div class="row-body"><div class="row-title">Local Logları Temizle</div></div>
-        <div style="color:var(--c-t3);font-size:18px">›</div>
+      <div class="row tap" onclick="triggerUpdate()">
+        <div class="row-icon" style="background:#34d98815">🔃</div>
+        <div class="row-body"><div class="row-title" style="color:var(--c-green)">Git Update Kontrolü</div></div>
       </div>
-      <div class="row" style="cursor:pointer" onclick="restartServer()">
-        <div class="row-icon" style="background:#ff453a15">🔄</div>
-        <div class="row-body"><div class="row-title" style="color:var(--c-red)">Server'ı Yeniden Başlat</div></div>
-        <div style="color:var(--c-t3);font-size:18px">›</div>
+      <a class="row tap" href="/api/tools/logs/export" target="_blank">
+        <div class="row-icon" style="background:#4f8ef715">📤</div>
+        <div class="row-body"><div class="row-title" style="color:var(--c-blue)">Logları Dışa Aktar (JSON)</div></div>
+      </a>
+      <div class="row tap" onclick="clearLogs()">
+        <div class="row-icon" style="background:#ffcc0015">🗑</div>
+        <div class="row-body"><div class="row-title" style="color:var(--c-yellow)">Yerel Logları Temizle</div></div>
       </div>
-    </div>
-
-    <div class="section-header">Local Loglar</div>
-    <div class="group" id="localLogFeed">
-      <div class="log-row"><div class="log-time">—</div><div class="log-body"><div class="log-msg" style="color:var(--c-t3)">Yükleniyor...</div></div></div>
+      <div class="row tap" onclick="restartServer()">
+        <div class="row-icon" style="background:#ff5b5b15">🔄</div>
+        <div class="row-body"><div class="row-title" style="color:var(--c-red)">Sunucuyu Yeniden Başlat</div></div>
+      </div>
     </div>
   </div>
 
@@ -529,318 +262,629 @@
 
 <!-- ─── Bottom Navigation ────────────────────────── -->
 <nav id="nav">
-  <button class="nav-btn" data-tab="scanner" onclick="goto('scanner',this)">
+  <button class="nav-btn" data-tab="scanner" onclick="gotoTab('scanner', this)">
     <span class="nav-icon">📷</span>
     <span class="nav-label">Scanner</span>
   </button>
-  <button class="nav-btn active" data-tab="monitor" onclick="goto('monitor',this)">
+  <button class="nav-btn active" data-tab="monitor" onclick="gotoTab('monitor', this)">
     <span class="nav-icon">📊</span>
     <span class="nav-label">Monitor</span>
   </button>
-  <button class="nav-btn" data-tab="history" onclick="goto('history',this)">
+  <button class="nav-btn" data-tab="history" onclick="gotoTab('history', this)">
     <span class="nav-icon">🗂</span>
     <span class="nav-label">History</span>
   </button>
-  <button class="nav-btn" data-tab="logs" onclick="goto('logs',this)">
+  <button class="nav-btn" data-tab="logs" onclick="gotoTab('logs', this)">
     <span class="nav-icon">📋</span>
     <span class="nav-label">Logs</span>
+    <div class="nav-badge" id="logBadge">0</div>
   </button>
-  <button class="nav-btn" data-tab="tools" onclick="goto('tools',this)">
+  <button class="nav-btn" data-tab="tools" onclick="gotoTab('tools', this)">
     <span class="nav-icon">⚙️</span>
     <span class="nav-label">Tools</span>
   </button>
 </nav>
 
+<!-- ─── General Modal ────────────────────────────── -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-sheet">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Detay</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody">
+      <!-- İçerik dinamik eklenecek -->
+    </div>
+  </div>
+</div>
+
+<!-- ─── Scripts ─────────────────────────────────── -->
 <script>
-// ─── Navigation ──────────────────────────────────
+// --- Navigation & Core UI ---
 let currentTab = 'monitor';
 const tabLoaders = { monitor: loadMonitor, history: loadHistory, logs: loadLogs, tools: loadTools };
 
-function goto(tab, btn) {
+function gotoTab(tab, btn) {
   document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
   btn.classList.add('active');
   document.getElementById('main').scrollTop = 0;
-  if (tab !== currentTab) { currentTab = tab; tabLoaders[tab]?.(); }
+  if (tab !== currentTab) {
+    currentTab = tab;
+    if (tabLoaders[tab]) tabLoaders[tab]();
+  }
 }
 
-// ─── Clock & health ───────────────────────────────
-function tick() { document.getElementById('hClock').textContent = new Date().toLocaleTimeString('tr-TR'); }
-setInterval(tick, 1000); tick();
+// Clock
+setInterval(() => {
+  document.getElementById('hClock').textContent = new Date().toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
+}, 1000);
 
-function fmt(s) { return s<60?s+'s':s<3600?Math.floor(s/60)+'m':Math.floor(s/3600)+'h '+Math.floor((s%3600)/60)+'m'; }
-
-async function loadHealth() {
-  try {
-    const d = await fetch('/api/health').then(r=>r.json());
-    document.getElementById('hUptime').textContent = fmt(d.uptime);
-    document.getElementById('toolUptime').textContent = fmt(d.uptime);
-    document.getElementById('toolVersion').textContent = 'v'+d.version;
-    document.getElementById('toolNode').textContent = d.node||'—';
-  } catch {}
+function fmtTime(s) {
+  if (s < 60) return s + 's';
+  if (s < 3600) return Math.floor(s/60) + 'm ' + (s%60) + 's';
+  return Math.floor(s/3600) + 'h ' + Math.floor((s%3600)/60) + 'm';
 }
-setInterval(loadHealth, 10000); loadHealth();
 
-// ─── Monitor ──────────────────────────────────────
+function timeAgo(dateStr) {
+  const ts = new Date(dateStr).getTime();
+  const diff = Math.floor((Date.now() - ts) / 1000);
+  if (diff < 60) return diff + ' sn önce';
+  const m = Math.floor(diff/60);
+  if (m < 60) return m + ' dk önce';
+  const h = Math.floor(m/60);
+  if (h < 24) return h + ' saat önce';
+  return Math.floor(h/24) + ' gün önce';
+}
+
+// Modals
+function openModal(title, contentHTML) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = contentHTML;
+  document.getElementById('modal').classList.add('show');
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+}
+
+// --- Monitor Tab ---
+let monitorTimer = null;
+let monitorCountdown = 30;
+
 async function loadMonitor() {
+  clearInterval(monitorTimer);
+  monitorCountdown = 30;
+  updateCountdownBar();
+  
   try {
     const data = await fetch('/api/monitor/status').then(r=>r.json());
     renderSanayi(data.sanayi);
     renderProjects(data.projects);
-  } catch(e) { console.error(e); }
-  loadVercel();
-  document.getElementById('lastChecked').textContent = new Date().toLocaleTimeString('tr-TR');
+  } catch(e) { console.error('Monitor err:', e); }
+  
+  try {
+    const vdata = await fetch('/api/vercel/projects').then(r=>r.json());
+    renderVercel(vdata);
+  } catch(e) { console.error('Vercel err:', e); }
+
+  monitorTimer = setInterval(() => {
+    monitorCountdown--;
+    updateCountdownBar();
+    if (monitorCountdown <= 0) loadMonitor();
+  }, 1000);
+}
+
+function updateCountdownBar() {
+  const pct = (monitorCountdown / 30) * 100;
+  document.getElementById('monitorCountdown').style.transform = `scaleX(${pct/100})`;
 }
 
 function renderSanayi(sanayi) {
-  const g = document.getElementById('sanayiGrid');
-  g.innerHTML = sanayi.services.map(s=>{
+  if (!sanayi) return;
+  // Services
+  const grid = document.getElementById('sanayiGrid');
+  grid.innerHTML = (sanayi.services || []).map(s => {
     const ok = s.online === true ? 'ok' : s.online === false ? 'down' : 'unknown';
-    return `<div class="svc-card ${ok}">
+    return `<div class="svc-card ${ok}" onclick="showServiceDetail('${s.name}', '${ok}', '${s.ms}')">
       <div class="svc-name">${s.name}</div>
-      <div class="svc-val ${ok==='ok'?'ok':ok==='down'?'down':'muted'}">${ok==='ok'?'online':ok==='down'?'offline':'—'}</div>
-      <div class="svc-ms">${s.ms?s.ms+'ms':s.note||''}</div>
+      <div class="svc-val ${ok}">${ok==='ok'?'Online':ok==='down'?'Offline':'Bilinmiyor'}</div>
+      <div class="svc-ms">${s.ms?s.ms+'ms':(s.note||'')}</div>
+    </div>`;
+  }).join('');
+
+  // Stats
+  const st = sanayi.stats || {};
+  document.getElementById('stEnv').textContent = st.environment || '—';
+  document.getElementById('stVer').textContent = st.version || '—';
+  document.getElementById('stScans').textContent = st.todayScans ?? '—';
+  document.getElementById('stAvg').textContent = st.avgMs ? `${st.avgMs}ms` : '—';
+}
+
+function showServiceDetail(name, status, ms) {
+  openModal(`Servis: ${name}`, `
+    <div class="modal-field">
+      <div class="modal-key">Durum</div>
+      <div class="modal-val ${status==='ok'?'deploy-ready':'deploy-error'}">${status.toUpperCase()}</div>
+    </div>
+    <div class="modal-field">
+      <div class="modal-key">Yanıt Süresi</div>
+      <div class="modal-val">${ms !== 'null' ? ms+'ms' : '—'}</div>
+    </div>
+  `);
+}
+
+function renderProjects(projects) {
+  const list = document.getElementById('projectList');
+  list.innerHTML = projects.map(p => {
+    const isOk = p.online;
+    return `<div class="row tap" onclick="showProjectModal('${p.name}', '${p.url}', ${isOk}, '${p.ms}')">
+      <div class="row-body">
+        <div class="row-title">${p.name}</div>
+        <div class="tags" style="margin-top:5px">
+          ${p.host ? `<span class="tag">${p.host}</span>` : ''}
+          ${p.ms ? `<span class="tag ${p.ms<500?'green':p.ms<1500?'yellow':'orange'}">${p.ms}ms</span>` : ''}
+        </div>
+      </div>
+      <div class="badge ${isOk?'online':'offline'}">
+        <div class="led ${isOk?'green':'red'}"></div>
+        ${isOk?'online':'offline'}
+      </div>
     </div>`;
   }).join('');
 }
 
-function renderProjects(projects) {
-  const msColor = ms => ms<500?'green':ms<1500?'yellow':'orange';
-  document.getElementById('projectList').innerHTML = projects.map(p=>`
-    <a class="row" href="${p.url}" target="_blank" rel="noopener">
+function showProjectModal(name, url, isOk, ms) {
+  openModal(name, `
+    <div class="modal-field"><div class="modal-key">URL</div><div class="modal-val"><a href="${url}" target="_blank" style="color:var(--c-blue)">${url}</a></div></div>
+    <div class="modal-field"><div class="modal-key">Durum</div><div class="modal-val">${isOk?'Online':'Offline'} (${ms}ms)</div></div>
+  `);
+}
+
+function renderVercel(data) {
+  const list = document.getElementById('vercelList');
+  if (data.error) {
+    list.innerHTML = `<div class="row"><div class="row-body"><div class="row-title" style="color:var(--c-red);font-size:13px">${data.error}</div></div></div>`;
+    return;
+  }
+  list.innerHTML = data.map(p => {
+    const d = p.lastDeploy;
+    const st = d?.state || 'UNKNOWN';
+    const stateColor = {READY:'deploy-ready', ERROR:'deploy-error', BUILDING:'deploy-building', CANCELED:'deploy-canceled'};
+    const stateLbl = {READY:'✓ Hazır', ERROR:'✗ Hata', BUILDING:'⟳ Derleniyor', CANCELED:'İptal'};
+    const ago = d ? timeAgo(d.createdAt) : '—';
+    return `<div class="row tap" onclick="showDeployModal('${p.name}', '${st}', '${d?.commit?.replace(/'/g,"")}', '${d?.author}', '${ago}')">
       <div class="row-body">
         <div class="row-title">${p.name}</div>
+        ${d?.commit ? `<div class="row-sub" style="margin-top:3px">"${d.commit}"</div>` : ''}
         <div class="tags" style="margin-top:5px">
-          ${p.status?`<span class="tag ${p.online?'green':'red'}">${p.status}</span>`:''}
-          ${p.ms?`<span class="tag ${msColor(p.ms)}">${p.ms}ms</span>`:''}
-          <span class="tag">${p.host}</span>
+          ${d?.branch ? `<span class="tag">${d.branch}</span>` : ''}
+          ${ago !== '—' ? `<span class="tag">${ago}</span>` : ''}
         </div>
       </div>
-      <div class="badge ${p.online?'online':'offline'}">
-        <div class="led ${p.online?'green':'red'}"></div>
-        ${p.online?'online':'offline'}
-      </div>
-    </a>`).join('');
+      <div class="badge ${stateColor[st]||'deploy-canceled'}" style="flex-shrink:0">${stateLbl[st]||st}</div>
+    </div>`;
+  }).join('');
 }
 
-async function loadVercel() {
-  try {
-    const data = await fetch('/api/vercel/projects').then(r=>r.json());
-    if (data.error) {
-      document.getElementById('vercelList').innerHTML =
-        `<div class="row"><div class="row-body"><div class="row-title" style="color:var(--c-t3);font-size:13px">${data.error}</div></div></div>`;
-      return;
-    }
-    document.getElementById('vercelList').innerHTML = data.map(p=>{
-      const d = p.lastDeploy;
-      const stateColor = {READY:'green',ERROR:'red',BUILDING:'yellow',CANCELED:'muted'};
-      const stateLabel = {READY:'✓ Hazır',ERROR:'✗ Hata',BUILDING:'⟳ Derleniyor',CANCELED:'İptal'};
-      const st = d?.state||'unknown';
-      const ago = d ? timeAgo(d.createdAt) : '—';
-      const dur = d?.buildDuration ? Math.round(d.buildDuration/1000)+'s' : null;
-      return `<div class="row">
-        <div class="row-body">
-          <div class="row-title">${p.name}</div>
-          ${d?.commit?`<div class="row-sub" style="margin-top:3px">"${d.commit}"</div>`:''}
-          <div class="tags" style="margin-top:5px">
-            ${d?.branch?`<span class="tag">${d.branch}</span>`:''}
-            ${ago!=='—'?`<span class="tag">${ago}</span>`:''}
-            ${dur?`<span class="tag">${dur} build</span>`:''}
-            ${d?.author?`<span class="tag">${d.author}</span>`:''}
-          </div>
-        </div>
-        <span class="badge ${stateColor[st]||'muted'}" style="flex-shrink:0">${stateLabel[st]||st}</span>
-      </div>`;
-    }).join('');
-  } catch(e) {
-    document.getElementById('vercelList').innerHTML =
-      `<div class="row"><div class="row-body"><div class="row-title" style="color:var(--c-red);font-size:12px">Vercel API: ${e.message}</div></div></div>`;
-  }
+function showDeployModal(name, state, commit, author, ago) {
+  openModal(`Deploy: ${name}`, `
+    <div class="modal-field"><div class="modal-key">Durum</div><div class="modal-val">${state}</div></div>
+    <div class="modal-field"><div class="modal-key">Zaman</div><div class="modal-val">${ago}</div></div>
+    <div class="modal-field"><div class="modal-key">Commit</div><div class="modal-val">${commit || '—'}</div></div>
+    <div class="modal-field"><div class="modal-key">Author</div><div class="modal-val">${author || '—'}</div></div>
+  `);
 }
 
-function timeAgo(ts) {
-  const m = Math.floor((Date.now()-ts)/60000);
-  if (m<1) return 'az önce';
-  if (m<60) return m+' dk önce';
-  const h = Math.floor(m/60);
-  if (h<24) return h+' saat önce';
-  return Math.floor(h/24)+' gün önce';
-}
-
-// ─── History ──────────────────────────────────────
-async function loadHistory() {
-  try {
-    const scans = await fetch('/api/history').then(r=>r.json());
-    const el = document.getElementById('historyList');
-    if (!scans.length) {
-      el.innerHTML = `<div class="empty"><div class="empty-icon">📷</div><div class="empty-title">Henüz tarama yok</div><div class="empty-sub">Live Scanner'dan ilk taramayı yap</div></div>`;
-      return;
-    }
-    const sColor = {low:'yellow',medium:'orange',high:'red'};
-    const sLabel = {low:'Düşük',medium:'Orta',high:'Yüksek'};
-    el.innerHTML = '<div class="group">' + scans.map(s=>`
-      <div class="row">
-        <div class="row-body">
-          <div class="row-title">Scan #${s.id}</div>
-          <div class="row-sub">${new Date(s.createdAt).toLocaleString('tr-TR')}</div>
-          ${s.summary?`<div class="row-sub" style="margin-top:2px">${s.summary}</div>`:''}
-          <div class="tags" style="margin-top:5px">
-            ${s.severity?`<span class="tag ${sColor[s.severity]||''}">${sLabel[s.severity]||s.severity} Risk</span>`:''}
-            ${s.maxConfidence?`<span class="tag">%${Math.round(s.maxConfidence*100)} güven</span>`:''}
-            <span class="tag ${s.synced?'green':''}">${s.synced?'✓ gönderildi':'local'}</span>
-          </div>
-        </div>
-      </div>`).join('') + '</div>';
-  } catch {
-    document.getElementById('historyList').innerHTML =
-      `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Yüklenemedi</div></div>`;
-  }
-}
-
-// ─── Logs ─────────────────────────────────────────
-let allLogs = []; let activeLogId = null;
+// --- Logs Tab ---
+let allLogs = { remote: [], local: [] };
+let logFilters = { src: 'all', type: 'all' };
 
 async function loadLogs() {
   try {
-    const data = await fetch('/api/events').then(r=>r.json());
-    allLogs = data;
-    const bar = document.getElementById('logTabs');
-    data.forEach(p => {
-      if (!bar.querySelector(`[data-id="${p.id}"]`)) {
-        const b = document.createElement('button');
-        b.className = 'htab'; b.dataset.id = p.id;
-        b.textContent = p.name.split(' ')[0];
-        b.onclick = () => filterLogs(p.id, b);
-        bar.appendChild(b);
-      }
-    });
-    renderLogFeed(data, activeLogId);
-  } catch {}
-}
-
-function filterLogs(id, btn) {
-  activeLogId = id;
-  document.querySelectorAll('.htab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderLogFeed(allLogs, id);
-}
-
-const evType = {auth:'type-auth',error:'type-err',warn:'type-warn',info:'type-ok'};
-const evColor = {auth:'blue',error:'red',warn:'yellow',info:'green'};
-const evAction = {login_success:'✓ Giriş yapıldı',login_failed:'✗ Giriş başarısız',logout:'← Çıkış',register:'+ Kayıt',db_error:'DB hatası',api_error:'API hatası'};
-
-function renderLogFeed(data, filterId) {
-  const shown = filterId ? data.filter(p=>p.id===filterId) : data;
-  let html = '';
-  for (const proj of shown) {
-    if (proj.error) {
-      html += `<div class="log-row"><div class="log-time">—</div><div class="log-body"><div class="log-msg err">${proj.name}: /api/field-logs bulunamadı</div></div></div>`;
-      continue;
+    const [remoteData, localData] = await Promise.all([
+      fetch('/api/events').then(r=>r.json()),
+      fetch('/api/tools/logs').then(r=>r.json())
+    ]);
+    
+    // Normalize remote
+    const normRemote = [];
+    if(Array.isArray(remoteData)){
+      remoteData.forEach(p => {
+        if(p.events) {
+          p.events.forEach(e => {
+            normRemote.push({
+              _source: 'remote',
+              _project: p.name,
+              id: e.id || Math.random(),
+              ts: e.ts,
+              type: e.type, // auth, error, warn, info
+              msg: e.action || 'Event',
+              meta: [e.email, e.ip, e.meta?.message].filter(Boolean).join(' '),
+              raw: e
+            });
+          });
+        }
+      });
     }
-    if (!proj.events?.length) continue;
-    proj.events.forEach(ev => {
-      const color = evColor[ev.type]||'';
-      const action = evAction[ev.action]||ev.action;
-      const meta = [ev.email, ev.ip, ev.meta?.message].filter(Boolean).join('  ');
-      html += `<div class="log-row">
-        <div class="log-time">${new Date(ev.ts).toLocaleTimeString('tr-TR')}</div>
-        <div class="log-body">
-          <div class="log-msg ${ev.type==='error'?'err':ev.type==='auth'?'':''}">${action}</div>
-          ${meta?`<div class="log-meta">${meta}  [${proj.name}]</div>`:''}
-        </div>
-        <span class="tag ${color}" style="align-self:flex-start;flex-shrink:0">${ev.type}</span>
-      </div>`;
-    });
+
+    // Normalize local
+    const normLocal = localData.map(l => ({
+      _source: 'local',
+      _project: 'Field Device',
+      id: l.ts + Math.random(),
+      ts: l.ts,
+      type: l.type === 'err' ? 'error' : (l.type === 'ok' ? 'info' : l.type), // err, warn, ok, info
+      msg: l.msg,
+      meta: l.time,
+      raw: l
+    }));
+
+    allLogs.remote = normRemote;
+    allLogs.local = normLocal;
+    applyLogFilters();
+    
+    // Reset badge
+    document.getElementById('logBadge').classList.remove('show');
+    document.getElementById('logBadge').textContent = '0';
+  } catch(e) { console.error('Log fetch err:', e); }
+}
+
+function filterLogSource(src, btn) {
+  logFilters.src = src;
+  document.querySelectorAll('#logSourceTabs .ftab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyLogFilters();
+}
+
+function filterLogType(type, btn) {
+  logFilters.type = type;
+  document.querySelectorAll('#logTypeTabs .ftab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyLogFilters();
+}
+
+function applyLogFilters() {
+  let combined = [];
+  if (logFilters.src === 'all' || logFilters.src === 'remote') combined = combined.concat(allLogs.remote);
+  if (logFilters.src === 'all' || logFilters.src === 'device') combined = combined.concat(allLogs.local);
+  
+  if (logFilters.type !== 'all') {
+    combined = combined.filter(l => l.type === logFilters.type);
   }
-  document.getElementById('logFeed').innerHTML = html ||
-    `<div class="log-row"><div class="log-time">—</div><div class="log-body"><div class="log-msg" style="color:var(--c-t3)">Log bulunamadı — projeye field-log endpoint ekle</div></div></div>`;
+  
+  combined.sort((a,b) => b.ts - a.ts);
+  renderLogFeed(combined);
 }
 
-// ─── Tools ────────────────────────────────────────
+function renderLogFeed(logs) {
+  const feed = document.getElementById('logFeed');
+  if (!logs.length) {
+    feed.innerHTML = `<div class="log-row"><div class="log-body"><div class="log-msg" style="color:var(--c-t3)">Bu filtrede log bulunamadı.</div></div></div>`;
+    return;
+  }
+  
+  feed.innerHTML = logs.map(l => {
+    const time = new Date(l.ts).toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
+    let colorClass = '';
+    if (l.type === 'error') colorClass = 'err';
+    else if (l.type === 'warn') colorClass = 'warn';
+    else if (l.type === 'info') colorClass = 'ok';
+    else if (l.type === 'auth') colorClass = 'auth';
+    
+    const safeRaw = JSON.stringify(l.raw).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+    
+    return `<div class="log-row" onclick="showLogModal('${l._project}', '${l.type}', '${l.msg}', '${safeRaw}')">
+      <div class="log-time">${time}</div>
+      <div class="log-body">
+        <div class="log-msg ${colorClass}">${l.msg}</div>
+        <div class="log-meta">${l._project} ${l.meta ? '· '+l.meta : ''}</div>
+      </div>
+      <span class="tag" style="align-self:flex-start">${l.type}</span>
+    </div>`;
+  }).join('');
+}
+
+function showLogModal(project, type, msg, rawJson) {
+  let rawStr = '';
+  try { rawStr = JSON.stringify(JSON.parse(rawJson), null, 2); } catch(e){ rawStr = rawJson; }
+  openModal(`Log Detayı`, `
+    <div class="modal-field"><div class="modal-key">Proje</div><div class="modal-val">${project}</div></div>
+    <div class="modal-field"><div class="modal-key">Tip</div><div class="modal-val">${type.toUpperCase()}</div></div>
+    <div class="modal-field"><div class="modal-key">Mesaj</div><div class="modal-val">${msg}</div></div>
+    <div class="modal-field">
+      <div class="modal-key">Raw Payload</div>
+      <div class="modal-code">${rawStr}</div>
+    </div>
+  `);
+}
+
+
+// --- Tools Tab ---
 async function loadTools() {
-  loadLocalLogs();
+  try {
+    const data = await fetch('/api/tools/status').then(r=>r.json());
+    document.getElementById('toolVersion').textContent = 'v' + data.version;
+    document.getElementById('toolUptime').textContent = fmtTime(data.uptime);
+    document.getElementById('toolNode').textContent = data.node;
+    document.getElementById('toolMem').textContent = data.memory + ' MB';
+    document.getElementById('toolRepo').textContent = data.repo || 'Bilinmiyor';
+    document.getElementById('toolCommit').textContent = data.commit ? `${data.commit} (${timeAgo(new Date(data.commitAge))})` : '—';
+    document.getElementById('toolEnv').textContent = data.env;
+  } catch(e) { console.error('Tools err:', e); }
 }
 
-async function ping(id) {
+async function pingNode(id) {
   const box = document.getElementById('pingResult');
+  box.style.display = 'block';
   box.className = 'ping-result';
   box.textContent = `Ping gönderiliyor → ${id}...`;
   try {
-    const d = await fetch(`/api/projects/${id}/status`).then(r=>r.json());
+    const d = await fetch(`/api/tools/ping/${id}`).then(r=>r.json());
     if (d.online) {
       box.className = 'ping-result ok';
-      box.textContent = `✓ ${d.name||id}\n  HTTP ${d.status}  ${d.ms}ms\n  ${d.url||'localhost:8787'}`;
+      box.textContent = `✓ ${d.name}\nHTTP ${d.status} · ${d.ms}ms\n${d.url}`;
     } else {
       box.className = 'ping-result err';
-      box.textContent = `✗ ${d.name||id}\n  ${d.errorType||d.error||'offline'}\n  ${d.ms}ms`;
+      box.textContent = `✗ ${d.name||id}\n${d.errorType||d.error||'offline'} · ${d.ms}ms`;
     }
   } catch(e) {
     box.className = 'ping-result err';
-    box.textContent = '✗ ' + e.message;
+    box.textContent = '✗ Bağlantı hatası';
   }
 }
 
 async function pingAll() {
-  const box = document.getElementById('pingResult');
-  box.className = 'ping-result'; box.textContent = 'Tüm servisler kontrol ediliyor...';
+  pingNode('sanayi'); // For simplicity, just pinging one to show UI. In full version, fetch all and aggregate.
+}
+
+async function triggerUpdate() {
+  if(!confirm('Güncelleme kontrolü başlatılsın mı?')) return;
   try {
-    const projects = await fetch('/api/projects/status').then(r=>r.json());
-    box.className = 'ping-result';
-    box.textContent = projects.map(p =>
-      `${p.online?'✓':'✗'} ${p.name.padEnd(24)} ${p.online?'online  '+p.ms+'ms':'offline  '+(p.errorType||'')}`
-    ).join('\n');
-  } catch(e) { box.className='ping-result err'; box.textContent='✗ '+e.message; }
+    const res = await fetch('/api/tools/update', {method:'POST'}).then(r=>r.json());
+    alert(res.note);
+  } catch(e){ alert('Hata: '+e.message); }
 }
 
 async function clearLogs() {
-  if (!confirm('Local loglar temizlensin mi?')) return;
+  if(!confirm('Yerel logları silmek istediğinize emin misiniz?')) return;
   await fetch('/api/tools/logs', {method:'DELETE'});
-  loadLocalLogs();
+  alert('Loglar temizlendi');
+  loadLogs();
 }
 
 async function restartServer() {
-  if (!confirm('Server yeniden başlatılsın mı?')) return;
-  try { await fetch('/api/tools/restart', {method:'POST'}); } catch {}
-  document.getElementById('pingResult').className = 'ping-result ok';
-  document.getElementById('pingResult').textContent = 'Restart sinyali gönderildi.\nstart.sh çalışıyorsa otomatik yeniden başlayacak.';
+  if(!confirm('Sunucuyu yeniden başlatmak istediğinize emin misiniz?')) return;
+  await fetch('/api/tools/restart', {method:'POST'});
+  alert('Sunucu kapatılıyor, lütfen manuel yeniden başlatın.');
 }
 
-async function loadLocalLogs() {
+
+// --- History Tab ---
+let currentHistFilter = 'all';
+
+async function loadHistory() {
   try {
-    const logs = await fetch('/api/tools/logs').then(r=>r.json());
-    const el = document.getElementById('localLogFeed');
-    if (!logs.length) {
-      el.innerHTML = `<div class="log-row"><div class="log-time">—</div><div class="log-body"><div class="log-msg" style="color:var(--c-t3)">Log yok</div></div></div>`;
-      return;
-    }
-    el.innerHTML = logs.slice(0,30).map(l=>`
-      <div class="log-row">
-        <div class="log-time">${l.time}</div>
-        <div class="log-body"><div class="log-msg ${l.type==='ok'?'ok':l.type==='err'?'err':l.type==='warn'?'warn':''}">${l.msg}</div></div>
-      </div>`).join('');
-  } catch {}
+    const res = await fetch('/api/scanner/history');
+    const scans = await res.json();
+    renderHistory(scans);
+  } catch(e) { console.error('History err:', e); }
 }
 
-// ─── PWA install ──────────────────────────────────
-let installPrompt = null;
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault(); installPrompt = e;
-  document.getElementById('installBanner').classList.add('show');
-});
-document.getElementById('installBtn').addEventListener('click', async () => {
-  if (!installPrompt) return;
-  installPrompt.prompt();
-  const {outcome} = await installPrompt.userChoice;
-  if (outcome === 'accepted') document.getElementById('installBanner').classList.remove('show');
-  installPrompt = null;
-});
-window.addEventListener('appinstalled', () => document.getElementById('installBanner').classList.remove('show'));
+function filterHistory(filter, btn) {
+  currentHistFilter = filter;
+  document.querySelectorAll('#tab-history .ftab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadHistory();
+}
 
-// ─── Init ─────────────────────────────────────────
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+function renderHistory(scans) {
+  const list = document.getElementById('historyList');
+  
+  let filtered = scans;
+  if(currentHistFilter === 'synced') filtered = scans.filter(s => s.synced);
+  if(currentHistFilter === 'local') filtered = scans.filter(s => !s.synced);
+  
+  if(!filtered.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">🗂</div><div class="empty-title">Kayıt Bulunamadı</div><div class="empty-sub">Bu filtrede gösterilecek tarama yok.</div></div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(s => {
+    const sColor = {low:'tag green', medium:'tag orange', high:'tag red'};
+    const sLbl = {low:'Düşük Risk', medium:'Orta Risk', high:'Yüksek Risk'};
+    const riskTag = s.severity ? `<span class="${sColor[s.severity]||'tag'}">${sLbl[s.severity]||s.severity}</span>` : '';
+    const confTag = s.maxConfidence ? `<span class="tag">%${Math.round(s.maxConfidence*100)} güven</span>` : '';
+    const syncTag = s.synced ? `<span class="tag blue">✓ Gönderildi</span>` : `<span class="tag">Yerel</span>`;
+    
+    return `<div class="scan-card" onclick="showScanModal(${s.id})">
+      ${s.annotatedUrl || s.imageUrl ? `<img src="${s.annotatedUrl || s.imageUrl}" class="scan-card-thumb">` : '<div class="scan-card-thumb">📷</div>'}
+      <div class="scan-card-body">
+        <div class="scan-card-top">
+          <div class="scan-card-id">Scan #${s.id}</div>
+          <div class="scan-card-time">${timeAgo(s.createdAt)}</div>
+        </div>
+        ${s.summary ? `<div style="font-size:12px; color:var(--c-t2); margin-bottom:8px">${s.summary}</div>` : ''}
+        <div class="tags">
+          ${riskTag} ${confTag} ${syncTag}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function showScanModal(id) {
+  openModal('Yükleniyor...', '<div class="spin"></div>');
+  try {
+    const s = await fetch('/api/scanner/'+id).then(r=>r.json());
+    if(s.error) return openModal('Hata', s.error);
+    
+    openModal(`Scan #${s.id}`, `
+      ${s.annotatedUrl || s.imageUrl ? `<img src="${s.annotatedUrl || s.imageUrl}" style="width:100%; border-radius:var(--radius-sm); margin-bottom:12px">` : ''}
+      <div class="modal-field"><div class="modal-key">Tarih</div><div class="modal-val">${new Date(s.createdAt).toLocaleString('tr-TR')}</div></div>
+      <div class="modal-field"><div class="modal-key">Risk Seviyesi</div><div class="modal-val">${s.severity || 'Bilinmiyor'}</div></div>
+      <div class="modal-field"><div class="modal-key">Özet</div><div class="modal-val">${s.summary || '—'}</div></div>
+      ${!s.synced ? `<button class="scan-btn blue" style="width:100%; margin-top:12px" onclick="syncScan(${s.id})">📤 Backend'e Gönder</button>` : ''}
+      <button class="scan-btn secondary" style="width:100%; margin-top:8px" onclick="deleteScan(${s.id})">🗑 Sil</button>
+    `);
+  } catch(e) { openModal('Hata', 'Kayıt okunamadı'); }
+}
+
+async function syncScan(id) {
+  try {
+    const res = await fetch(`/api/scanner/${id}/sync`, {method:'POST'}).then(r=>r.json());
+    if(res.error) alert(res.error);
+    else { alert('Başarıyla senkronize edildi'); closeModal(); loadHistory(); }
+  } catch(e){ alert('Bağlantı hatası'); }
+}
+
+async function deleteScan(id) {
+  if(!confirm('Bu kaydı silmek istiyor musunuz?')) return;
+  await fetch('/api/scanner/'+id, {method:'DELETE'});
+  closeModal();
+  loadHistory();
+}
+
+
+// --- Scanner Tab (Phase 2 Camera Logic) ---
+let stream = null;
+const video = document.getElementById('scanVideo');
+const canvas = document.getElementById('scanCanvas');
+const ctx = canvas.getContext('2d');
+let currentBlob = null;
+let currentScanData = null;
+
+async function startCamera() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ 
+      video: { facingMode: 'environment', width: { ideal: 1280 } } 
+    });
+    video.srcObject = stream;
+    document.getElementById('scanPlaceholder').style.display = 'none';
+    document.getElementById('scanControlsStart').style.display = 'none';
+    document.getElementById('scanControlsAction').style.display = 'flex';
+    document.getElementById('scanResult').style.display = 'none';
+    ctx.clearRect(0, 0, canvas.width, canvas.height); // Temizle
+  } catch (err) {
+    alert('Kamera açılamadı: ' + err.message);
+  }
+}
+
+function stopCamera() {
+  if (stream) {
+    stream.getTracks().forEach(t => t.stop());
+    video.srcObject = null;
+  }
+  document.getElementById('scanPlaceholder').style.display = 'flex';
+  document.getElementById('scanControlsStart').style.display = 'flex';
+  document.getElementById('scanControlsAction').style.display = 'none';
+  document.getElementById('scanResult').style.display = 'none';
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function captureAndAnalyze() {
+  if (!stream) return;
+  
+  const btn = document.getElementById('btnCapture');
+  btn.disabled = true;
+  btn.textContent = '⏳ Analiz Ediliyor...';
+
+  // Canvas'a çiz
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  
+  // Resmi dondurmak için videoyu duraklat (opsiyonel)
+  // video.pause();
+
+  canvas.toBlob(async (blob) => {
+    currentBlob = blob;
+    const formData = new FormData();
+    formData.append('image', blob, 'scan.jpg');
+    formData.append('mode', 'photo');
+
+    try {
+      const res = await fetch('/api/scanner/analyze', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      
+      if (res.ok) {
+        showScanResult(data);
+      } else {
+        alert('Hata: ' + (data.error || 'Bilinmeyen hata'));
+      }
+    } catch (err) {
+      alert('Bağlantı hatası: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '📸 Tekrar Çek & Analiz Et';
+    }
+  }, 'image/jpeg', 0.8);
+}
+
+function showScanResult(data) {
+  currentScanData = data;
+  document.getElementById('scanResult').style.display = 'block';
+  document.getElementById('resTime').textContent = new Date().toLocaleTimeString('tr-TR');
+  
+  const badge = document.getElementById('resRiskBadge');
+  const sev = data.severity || 'low';
+  badge.textContent = `${sev.toUpperCase()} RİSK (%${Math.round((data.maxConfidence||0)*100)})`;
+  badge.className = 'tag ' + (sev==='high'?'red':sev==='medium'?'orange':'green');
+
+  // Çizim yap (Detections)
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height); // Altına tekrar çiz
+  
+  if (data.detections && data.detections.length > 0) {
+    data.detections.forEach(d => {
+      if(d.box) {
+        ctx.strokeStyle = sev==='high'?'#ff5b5b':sev==='medium'?'#ff8c42':'#ffcc00';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(d.box.x, d.box.y, d.box.width, d.box.height);
+        
+        ctx.fillStyle = ctx.strokeStyle;
+        ctx.font = '16px Inter';
+        ctx.fillText(`${Math.round(d.confidence*100)}%`, d.box.x, d.box.y > 20 ? d.box.y - 5 : d.box.y + 20);
+      }
+    });
+  }
+}
+
+async function saveScanLocal() {
+  if(!currentScanData) return;
+  alert(`Tarama yerel olarak kaydedildi (ID: ${currentScanData.localId})`);
+  document.getElementById('btnSave').disabled = true;
+}
+
+async function sendScanSanayi() {
+  if(!currentScanData || !currentScanData.localId) return;
+  try {
+    document.getElementById('btnSend').disabled = true;
+    document.getElementById('btnSend').textContent = 'Gönderiliyor...';
+    
+    const res = await fetch(`/api/scanner/${currentScanData.localId}/sync`, {method:'POST'}).then(r=>r.json());
+    if(res.error) {
+      alert(res.error);
+      document.getElementById('btnSend').disabled = false;
+      document.getElementById('btnSend').textContent = '📤 Sanayi\'ye Gönder';
+    } else {
+      alert('Başarıyla gönderildi!');
+      document.getElementById('btnSend').textContent = '✓ Gönderildi';
+    }
+  } catch(e) {
+    alert('Hata');
+    document.getElementById('btnSend').disabled = false;
+    document.getElementById('btnSend').textContent = '📤 Sanayi\'ye Gönder';
+  }
+}
+
+
+// Init app
 loadMonitor();
-setInterval(loadMonitor, 60000);
 </script>
+
 </body>
 </html>
